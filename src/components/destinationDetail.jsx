@@ -595,11 +595,12 @@ const DestinationDetail = (props) => {
           <FaComment className="ml-2" />
         </div>
       </div>
-      {token && addComment ? (
-        <FaCommentSlash className="hover:cursor-pointer" onClick={() => setAddComment(false)} />
-      ) : (
-        <FaCommentMedical className="hover:cursor-pointer" onClick={() => setAddComment(true)} />
-      )}
+      {token &&
+        (addComment ? (
+          <FaCommentSlash className="hover:cursor-pointer" onClick={() => setAddComment(false)} />
+        ) : (
+          <FaCommentMedical className="hover:cursor-pointer" onClick={() => setAddComment(true)} />
+        ))}
       {viewComments && commentCount() > 0 && (
         <div className="mt-2 border-t border-green-600">
           {commentsData?.map((el) => {
