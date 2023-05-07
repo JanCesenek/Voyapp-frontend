@@ -123,6 +123,25 @@ const Profile = () => {
     return null;
   };
 
+  const removeBearerToken = () => {
+    delete api.defaults.headers.common["Authorization"];
+  };
+
+  const deleteUser = async (id) => {
+    if (window.confirm("Really wanna delete your account?")) {
+      await api
+        .delete(`/users/${id}`, {
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        })
+        .then(async () => {
+          await refetch();
+          removeBearerToken();
+          localStorage.clear();
+        })
+        .catch((err) => console.log(`Delete req - ${err}`));
+    }
+  };
+
   const handleFileChange = (e) => {
     console.log(e.target.files[0]);
     setDestImage(e.target.files[0]);
@@ -397,7 +416,11 @@ const Profile = () => {
   if (loading) return <Loading />;
 
   return curUsername ? (
-    <div className="flex flex-col [&>*]:my-2 items-center [&>*]:w-3/5 min-w-[30rem] mt-20 bg-gradient-to-b from-black/5 via-black/70 to-black/5 rounded-lg p-5">
+    <div className="flex relative flex-col [&>*]:my-2 items-center [&>*]:w-3/5 min-w-[30rem] mt-20 bg-gradient-to-b from-black/5 via-black/70 to-black/5 rounded-lg p-5">
+      <FaWindowClose
+        className="absolute top-5 right-[-5rem] hover:cursor-pointer"
+        onClick={() => deleteUser(curUsername)}
+      />
       <div className="flex justify-center items-center text-[2rem] mx-5 !w-full border-b border-white pb-5">
         <div>
           <img
