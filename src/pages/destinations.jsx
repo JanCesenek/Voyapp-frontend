@@ -186,16 +186,8 @@ const Destinations = (props) => {
           )}
         </div>
       )}
-      {notification && (
-        <Notification
-          message="Post deleted successfully!"
-          className={props.profile && "top-[47rem]"}
-          delete
-        />
-      )}
-      {editNotification && (
-        <Notification message="Post updated successfully!" className="top-[47rem]" patch />
-      )}
+      {notification && <Notification message="Post deleted successfully!" delete />}
+      {editNotification && <Notification message="Post updated successfully!" patch />}
       <div
         className={`grid gap-10 mt-10 ${
           props.profile ? "sm:grid-cols-2" : "2xl:grid-cols-4 lg:grid-cols-3 sm:grid-cols-2"
