@@ -16,7 +16,6 @@ import { HiOutlineMail, HiOutlinePhone } from "react-icons/hi";
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
 import { OpenStreetMapProvider, GeoSearchControl } from "leaflet-geosearch";
 import "leaflet-geosearch/dist/geosearch.css";
-import "leaflet/dist/leaflet.css";
 import Loading from "./loading";
 import Comment from "./comment";
 import Button from "./custom/button";

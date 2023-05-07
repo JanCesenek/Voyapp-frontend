@@ -6,7 +6,6 @@ import DestinationDetail from "../components/destinationDetail";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { OpenStreetMapProvider, GeoSearchControl } from "leaflet-geosearch";
 import "leaflet-geosearch/dist/geosearch.css";
-import "leaflet/dist/leaflet.css";
 import Notification from "../components/notification";
 import { goldIcon, greenIcon } from "../core/icons";
 
@@ -35,6 +34,7 @@ const Destinations = (props) => {
     useEffect(() => {
       const searchControl = new GeoSearchControl({
         provider,
+        icon: goldIcon,
       });
 
       map.addControl(searchControl);

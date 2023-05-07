@@ -6,7 +6,6 @@ import RentDetail from "../components/rentDetail";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { OpenStreetMapProvider, GeoSearchControl } from "leaflet-geosearch";
 import "leaflet-geosearch/dist/geosearch.css";
-import "leaflet/dist/leaflet.css";
 import Notification from "../components/notification";
 import { greenIcon, purpleIcon } from "../core/icons";
 

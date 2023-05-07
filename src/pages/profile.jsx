@@ -15,7 +15,6 @@ import Button from "../components/custom/button";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { OpenStreetMapProvider, GeoSearchControl } from "leaflet-geosearch";
 import "leaflet-geosearch/dist/geosearch.css";
-import "leaflet/dist/leaflet.css";
 import { createClient } from "@supabase/supabase-js";
 import { supStorageURL, supStorageKEY } from "../core/supabaseStorage";
 import { v4 as uuid } from "uuid";
@@ -108,6 +107,7 @@ const Profile = () => {
     useEffect(() => {
       const searchControl = new GeoSearchControl({
         provider,
+        marker: greenIcon,
       });
 
       map.addControl(searchControl);
