@@ -10,13 +10,13 @@ const Intro = () => {
   if (isLoading) return <Loading />;
 
   return (
-    <div className="flex flex-col xl:w-3/4 items-center text-[1.5rem] my-20 bg-gradient-to-b from-black/50 to-green-700/30 shadow-black/50 shadow-lg rounded-lg p-10">
+    <div className="flex flex-col xl:w-3/4 text-[1.5rem] my-20 bg-gradient-to-b from-black/70 to-green-700/50 shadow-black/50 shadow-lg rounded-lg p-10">
       <img
         src={adminPic}
         alt="admin pic"
-        className="w-auto h-auto max-w-[10rem] max-h-[10rem] rounded-lg"
+        className="w-auto h-auto max-w-[10rem] max-h-[10rem] rounded-lg self-center"
       />
-      <p className="mt-10 text-[1.8rem] text-green-400">
+      <p className="mt-10 text-[1.8rem] text-green-400 self-center">
         Welcome! Let me explain to you how this app works.
       </p>
       <p className="mt-5">

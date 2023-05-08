@@ -46,9 +46,11 @@ code {
   }
 }
 
-/* .leaflet-control-zoom {
-  height: 32px;
-} */
+@media (min-width: 2200px) {
+  html {
+    font-size: 125%;
+  }
+}
 
 @media (max-width: 640px) {
   .leaflet-control-zoom-in,

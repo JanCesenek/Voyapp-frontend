@@ -378,7 +378,7 @@ const SignUp = (props) => {
       </div>
       {/* {isSubmitting && <Submitting />} */}
       <p
-        className="mt-5 text-yellow-500 underline hover:cursor-pointer text-[1.5rem]"
+        className="mt-5 text-green-400 underline hover:cursor-pointer text-[1.5rem]"
         onClick={props.link}>
         Back
       </p>

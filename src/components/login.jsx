@@ -75,7 +75,7 @@ const Login = (props) => {
       </Form>
       {isSubmitting && <Submitting />}
       <p
-        className="mt-5 text-yellow-400 underline hover:cursor-pointer text-[1.5rem]"
+        className="mt-5 text-green-400 underline hover:cursor-pointer text-[1.5rem]"
         onClick={props.link}>
         New user? Click here to create an account.
       </p>{" "}

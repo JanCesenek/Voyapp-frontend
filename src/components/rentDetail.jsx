@@ -478,7 +478,7 @@ const RentDetail = (props) => {
       />
     </div>
   ) : (
-    <div className="relative flex flex-col items-center bg-gradient-to-b from-black/50 to-green-700/50 shadow-black/50 shadow-xl rounded-md p-5 my-20 [&>*]:my-2">
+    <div className="relative flex flex-col items-center bg-gradient-to-b from-black/70 to-green-700/50 shadow-black/50 shadow-xl rounded-md p-5 my-20 [&>*]:my-2">
       <FaSignOutAlt
         className="absolute top-5 right-5 hover:cursor-pointer text-[1.5rem]"
         onClick={props.back}
