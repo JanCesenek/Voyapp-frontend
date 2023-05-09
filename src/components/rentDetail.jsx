@@ -321,6 +321,7 @@ const RentDetail = (props) => {
       startDate: realStartDate,
       endDate: realEndDate,
     };
+    setSubmitting(true);
     await api
       .post("/rent-reservations", postReqPayload, {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -330,6 +331,7 @@ const RentDetail = (props) => {
     setAddReservation(false);
     setStartDate(null);
     setEndDate(null);
+    setSubmitting(false);
     setNotification(true);
     setTimeout(() => {
       setNotification(false);
@@ -551,7 +553,7 @@ const RentDetail = (props) => {
         </p>
       )}
       {addReservation && (
-        <div className="my-5 flex flex-col [&>*]:my-2">
+        <div className="my-5 flex flex-col [&>*]:my-2 p-5 bg-gradient-to-b from-black/50 to-green-500/30 shadow-black/50 shadow-lg rounded-lg">
           <div className="flex items-center">
             <label htmlFor="people">People:</label>
             <input
@@ -614,7 +616,7 @@ const RentDetail = (props) => {
           </p>
         )}
       {addReview && (
-        <div className="flex flex-col [&>*]:my-2">
+        <div className="flex flex-col [&>*]:my-2 p-5 bg-gradient-to-b from-black/50 to-green-500/30 shadow-black/50 shadow-lg rounded-lg">
           <div className="flex items-center">
             <label htmlFor="rating" className="min-w-[5rem]">
               Rating:
@@ -645,7 +647,7 @@ const RentDetail = (props) => {
           </div>
           <Button
             title={submitting ? "Submitting..." : "Submit"}
-            classes={`self-center text-[0.7rem] ${
+            classes={`self-center !text-[1rem] ${
               (!message || submitting) && "pointer-events-none opacity-50"
             }`}
             onClick={createReview}

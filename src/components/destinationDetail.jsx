@@ -296,6 +296,7 @@ const DestinationDetail = (props) => {
       message,
     };
 
+    setSubmitting(true);
     await api
       .post("/comments", postReqPayload, {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -304,6 +305,7 @@ const DestinationDetail = (props) => {
       .catch((err) => console.log(`Post req - ${err}`));
     setMessage("");
     setAddComment(false);
+    setSubmitting(false);
   };
 
   const anyReservations = reservationsData?.find((el) => el.postID === props.id);
@@ -323,6 +325,7 @@ const DestinationDetail = (props) => {
       postID: props.id,
       people: +people,
     };
+    setSubmitting(true);
     await api
       .post("/destination-reservations", postReqPayload, {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -330,6 +333,7 @@ const DestinationDetail = (props) => {
       .then(async () => await refetchReservations())
       .catch((err) => console.log(`Post req - ${err}`));
     setAddReservation(false);
+    setSubmitting(false);
     setNotification(true);
     setTimeout(() => {
       setNotification(false);
@@ -549,7 +553,7 @@ const DestinationDetail = (props) => {
         </p>
       )}
       {addReservation && (
-        <div className="my-5 flex flex-col [&>*]:my-2">
+        <div className="my-5 flex flex-col [&>*]:my-2 p-5 bg-gradient-to-b from-black/50 to-green-500/30 shadow-black/50 shadow-lg rounded-lg">
           <div className="flex items-center">
             <label htmlFor="people">People:</label>
             <input
@@ -564,10 +568,10 @@ const DestinationDetail = (props) => {
             />
           </div>
           <Button
-            title="Submit"
+            title={submitting ? "Submitting..." : "Submit"}
             classes={`${
-              (people > spotsLeft || people < 1) && "pointer-events-none opacity-50"
-            } text-[0.7rem] self-center`}
+              (people > spotsLeft || people < 1 || submitting) && "pointer-events-none opacity-50"
+            } !text-[1rem] self-center`}
             onClick={createReservation}
           />
         </div>
@@ -634,8 +638,10 @@ const DestinationDetail = (props) => {
             />
           </div>
           <Button
-            title="Submit"
-            classes={`self-center !text-[1.2rem] ${!message && "pointer-events-none opacity-50"}`}
+            title={submitting ? "Submitting..." : "Submit"}
+            classes={`self-center !text-[1.2rem] ${
+              (!message || submitting) && "pointer-events-none opacity-50"
+            }`}
             onClick={commentPost}
           />
         </div>
