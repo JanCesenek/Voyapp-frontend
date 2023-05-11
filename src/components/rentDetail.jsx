@@ -1,7 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useUpdate } from "../hooks/use-update";
 import { BsStar, BsStarFill, BsStarHalf, BsFillFileImageFill } from "react-icons/bs";
-import { FaCalendarAlt, FaWalking, FaMapMarkerAlt, FaSignOutAlt, FaEuroSign } from "react-icons/fa";
+import {
+  FaCalendarAlt,
+  FaWalking,
+  FaMapMarkerAlt,
+  FaSignOutAlt,
+  FaEuroSign,
+  FaImages,
+} from "react-icons/fa";
 import { HiOutlineMail, HiOutlinePhone } from "react-icons/hi";
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
 import { OpenStreetMapProvider, GeoSearchControl } from "leaflet-geosearch";
@@ -14,7 +21,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { v4 as uuid } from "uuid";
 import moment from "moment";
 import Notification from "./notification";
-import { greenIcon, purpleIcon } from "../core/icons";
+import { greenIcon, purpleIcon, goldIcon } from "../core/icons";
 
 const RentDetail = (props) => {
   const lat = localStorage.getItem("lat");
@@ -31,6 +38,7 @@ const RentDetail = (props) => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [editPost, setEditPost] = useState(false);
+  const [morePics, setMorePics] = useState(false);
   const [name, setName] = useState(props.name);
   const [image, setImage] = useState(null);
   const [price, setPrice] = useState(props.price);
@@ -64,6 +72,8 @@ const RentDetail = (props) => {
     refetch: refetchReviews,
     isLoading: reviewsLoading,
   } = useUpdate("/reviews");
+  const { data: picsData, isLoading: picsLoading } = useUpdate("/rent-pictures");
+  const { data: destinationsData, isLoading: destinationsLoading } = useUpdate("/destinations");
 
   const postOwner = data?.find((el) => el.username === props.userID);
   const ownerFullName = postOwner?.firstName + " " + postOwner?.lastName;
@@ -214,6 +224,15 @@ const RentDetail = (props) => {
   const alreadyReviewed = reviewsData?.find(
     (el) => el.postID === props.id && el.userID === curUsername
   );
+  const anyPics = picsData?.find((el) => el.postID === props.picID);
+
+  const picNumber = () => {
+    let count = 0;
+    picsData?.map((el) => {
+      if (el.postID === props.picID) count++;
+    });
+    return count;
+  };
 
   const getDisabledDates = () => {
     const dateArray = [];
@@ -365,7 +384,8 @@ const RentDetail = (props) => {
     setSubmitting(false);
   };
 
-  const loading = isLoading || rentsLoading || reservationsLoading || reviewsLoading;
+  const loading =
+    isLoading || rentsLoading || reservationsLoading || reviewsLoading || destinationsLoading;
   if (loading) return <Loading />;
 
   return editPost ? (
@@ -468,6 +488,13 @@ const RentDetail = (props) => {
               </Marker>
             );
           })}
+          {destinationsData?.map((el) => {
+            return (
+              <Marker key={el.id} position={[el.latitude, el.longitude]} icon={goldIcon}>
+                <Popup>{el.name}</Popup>
+              </Marker>
+            );
+          })}
           <Marker position={coords} icon={greenIcon}>
             <Popup>Default marker - controllable. This location will be saved.</Popup>
           </Marker>
@@ -503,11 +530,23 @@ const RentDetail = (props) => {
             <HiOutlinePhone className="mr-2" />
             <p>{postOwner?.phone}</p>
           </div>
-          <img
-            src={props.image}
-            alt="some img"
-            className="w-auto h-auto max-w-[20rem] max-h-[20rem] rounded-lg"
-          />
+          <div className="relative flex flex-col">
+            <img
+              src={props.image}
+              alt="some img"
+              className="w-auto h-auto max-w-[20rem] max-h-[20rem] rounded-lg"
+            />
+            {anyPics && (
+              <p
+                className="absolute bottom-0 left-0 flex items-center [&>*]:mx-1 rounded-bl-lg bg-black/50 hover:cursor-pointer"
+                onClick={() => setMorePics(true)}>
+                <FaImages />
+                <span>
+                  {picNumber()} more {picNumber() === 1 ? "picture" : "pictures"}
+                </span>
+              </p>
+            )}
+          </div>
         </div>
         <div className="[&>*]:my-2">
           <div className="flex items-center">
@@ -536,6 +575,13 @@ const RentDetail = (props) => {
             {rentsData?.map((el) => {
               return (
                 <Marker key={el.id} position={[el.latitude, el.longitude]} icon={purpleIcon}>
+                  <Popup>{el.name}</Popup>
+                </Marker>
+              );
+            })}
+            {destinationsData?.map((el) => {
+              return (
+                <Marker key={el.id} position={[el.latitude, el.longitude]} icon={goldIcon}>
                   <Popup>{el.name}</Popup>
                 </Marker>
               );
@@ -706,6 +752,22 @@ const RentDetail = (props) => {
         </p>
       )}
       {notification && <Notification className="top-[-4rem]" message="Reserved!" post />}
+      {morePics && (
+        <div
+          className="fixed grid md:grid-cols-2 2xl:grid-cols-3 [@media(min-width:2000px)]:grid-cols-4 gap-10 top-0 z-[1000] bg-black/80 p-10 hover:cursor-pointer w-[40rem] sm:w-full h-full"
+          onClick={() => setMorePics(false)}>
+          {picsData?.map((el) => {
+            return (
+              <img
+                src={el.name}
+                alt="More imgs"
+                key={el.id}
+                className="w-auto h-auto max-w-[30rem] max-h-[30rem]"
+              />
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

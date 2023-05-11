@@ -40,6 +40,8 @@ const Profile = () => {
     refetch: refetchDestinationReservations,
     isLoading: destinationReservationsLoading,
   } = useUpdate("/destination-reservations");
+  const { refetch: refetchDestinationPictures } = useUpdate("/destination-pictures");
+  const { refetch: refetchRentPictures } = useUpdate("/rent-pictures");
   const { data: rentsData, refetch: refetchRents, isLoading: rentsLoading } = useUpdate("/rents");
   const {
     data: rentReservationsData,
@@ -61,12 +63,14 @@ const Profile = () => {
   const [addAccommodation, setAddAccommodation] = useState(false);
   const [destName, setDestName] = useState("");
   const [destImage, setDestImage] = useState("");
+  const [destImages, setDestImages] = useState("");
   const [destDescription, setDestDescription] = useState("");
   const [destStartDate, setDestStartDate] = useState("");
   const [destEndDate, setDestEndDate] = useState("");
   const [destFreeSpots, setDestFreeSpots] = useState(1);
   const [accName, setAccName] = useState("");
   const [accImage, setAccImage] = useState("");
+  const [accImages, setAccImages] = useState("");
   const [accPrice, setAccPrice] = useState(5);
   const [accDescription, setAccDescription] = useState("");
   const [accPeople, setAccPeople] = useState(1);
@@ -81,7 +85,9 @@ const Profile = () => {
   const [changePic, setChangePic] = useState(false);
   const [editedPic, setEditedPic] = useState(null);
   const fileInputRef = useRef(null);
+  const filesInputRef = useRef(null);
   const accFileInputRef = useRef(null);
+  const accFilesInputRef = useRef(null);
   const inputValueRef = useRef(null);
   const malePic =
     "https://cxfluuggeeoujjwckzuu.supabase.co/storage/v1/object/public/traveling/userPics/Default1.png";
@@ -145,6 +151,11 @@ const Profile = () => {
   const handleFileChange = (e) => {
     console.log(e.target.files[0]);
     setDestImage(e.target.files[0]);
+  };
+
+  const handleFilesChange = (e) => {
+    console.log(e.target.files);
+    setDestImages([...destImages, ...e.target.files]);
   };
 
   const handleProfilePic = (e) => {
@@ -225,6 +236,7 @@ const Profile = () => {
 
   const createDestination = async () => {
     const uniqueID = uuid();
+    const picID = uuid();
 
     const handleUpload = async () => {
       const { data, error } = await supabase.storage
@@ -252,6 +264,45 @@ const Profile = () => {
     };
     await handleUpload();
 
+    destImages?.map(async (el, i) => {
+      const uniqueID = uuid();
+      const { data, error } = await supabase.storage
+        .from("traveling")
+        .upload(`destinations/${uniqueID}`, destImages[i], {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      const { data: dataGet, error: errorGet } = await supabase.storage
+        .from("traveling")
+        .list("destinations");
+
+      if (error) {
+        console.log("Error uploading file...", error);
+      } else {
+        console.log("File uploaded!", data.path);
+      }
+
+      if (errorGet) {
+        console.log("Error listing files...", error);
+      } else {
+        console.log("Files listed!", dataGet);
+      }
+
+      const postReqPayload = {
+        name: `https://cxfluuggeeoujjwckzuu.supabase.co/storage/v1/object/public/traveling/destinations/${uniqueID}`,
+        postID: picID,
+        userID: curUsername,
+      };
+
+      await api
+        .post("/destination-pictures", postReqPayload, {
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        })
+        .then(async () => await refetchDestinationPictures())
+        .catch((err) => console.log(`Post req - ${err}`));
+    });
+
     const postReqPayload = {
       userID: curUsername,
       name: destName,
@@ -262,6 +313,7 @@ const Profile = () => {
       freeSpots: +destFreeSpots,
       latitude: +coords[0],
       longitude: +coords[1],
+      picID,
     };
 
     setSubmitting(true);
@@ -286,6 +338,7 @@ const Profile = () => {
 
   const createAccommodation = async () => {
     const uniqueID = uuid();
+    const picID = uuid();
 
     const handleUpload = async () => {
       const { data, error } = await supabase.storage
@@ -313,6 +366,45 @@ const Profile = () => {
     };
     await handleUpload();
 
+    accImages?.map(async (el, i) => {
+      const uniqueID = uuid();
+      const { data, error } = await supabase.storage
+        .from("traveling")
+        .upload(`rents/${uniqueID}`, accImages[i], {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      const { data: dataGet, error: errorGet } = await supabase.storage
+        .from("traveling")
+        .list("rents");
+
+      if (error) {
+        console.log("Error uploading file...", error);
+      } else {
+        console.log("File uploaded!", data.path);
+      }
+
+      if (errorGet) {
+        console.log("Error listing files...", error);
+      } else {
+        console.log("Files listed!", dataGet);
+      }
+
+      const postReqPayload = {
+        name: `https://cxfluuggeeoujjwckzuu.supabase.co/storage/v1/object/public/traveling/rents/${uniqueID}`,
+        postID: picID,
+        userID: curUsername,
+      };
+
+      await api
+        .post("/rent-pictures", postReqPayload, {
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        })
+        .then(async () => await refetchRentPictures())
+        .catch((err) => console.log(`Post req - ${err}`));
+    });
+
     const postReqPayload = {
       userID: curUsername,
       name: accName,
@@ -322,6 +414,7 @@ const Profile = () => {
       people: +accPeople,
       latitude: +accCoords[0],
       longitude: +accCoords[1],
+      picID,
     };
 
     setSubmitting(true);
@@ -580,6 +673,28 @@ const Profile = () => {
             )}
           </div>
           <div className="flex items-center">
+            <p className="min-w-[7rem]">More images (voluntary):</p>
+            <input
+              type="file"
+              name="pic"
+              id="pic"
+              size="10"
+              accept="image/*"
+              multiple
+              onChange={handleFilesChange}
+              ref={filesInputRef}
+            />
+            {destImages && (
+              <AiFillCloseCircle
+                className="w-3 h-3 hover:cursor-pointer mr-2"
+                onClick={() => {
+                  filesInputRef.current.value = null;
+                  setDestImages(null);
+                }}
+              />
+            )}
+          </div>
+          <div className="flex items-center">
             <label htmlFor="description" className="min-w-[7rem]">
               Description:
             </label>
@@ -707,6 +822,28 @@ const Profile = () => {
                 onClick={() => {
                   accFileInputRef.current.value = null;
                   setAccImage(null);
+                }}
+              />
+            )}
+          </div>
+          <div className="flex items-center">
+            <p className="min-w-[7rem]">More images (voluntary):</p>
+            <input
+              type="file"
+              name="pic"
+              id="pic"
+              size="10"
+              accept="image/*"
+              multiple
+              onChange={(e) => setAccImages([...accImages, ...e.target.files])}
+              ref={accFilesInputRef}
+            />
+            {accImages && (
+              <AiFillCloseCircle
+                className="w-3 h-3 hover:cursor-pointer mr-2"
+                onClick={() => {
+                  accFilesInputRef.current.value = null;
+                  setAccImages(null);
                 }}
               />
             )}

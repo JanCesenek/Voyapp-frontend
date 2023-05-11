@@ -7,7 +7,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { OpenStreetMapProvider, GeoSearchControl } from "leaflet-geosearch";
 import "leaflet-geosearch/dist/geosearch.css";
 import Notification from "../components/notification";
-import { greenIcon, purpleIcon } from "../core/icons";
+import { greenIcon, purpleIcon, goldIcon } from "../core/icons";
 
 const Accommodation = (props) => {
   const lat = localStorage.getItem("lat");
@@ -16,6 +16,7 @@ const Accommodation = (props) => {
   const { data, isLoading } = useUpdate("/rents");
   const { data: usersData, isLoading: usersLoading } = useUpdate("/users");
   const { data: reviewsData, isLoading: reviewsLoading } = useUpdate("/reviews");
+  const { data: destinationsData, isLoading: destinationsLoading } = useUpdate("/destinations");
   const [detail, setDetail] = useState(false);
   const [addFilter, setAddFilter] = useState(false);
   const [filterValue, setFilterValue] = useState("");
@@ -76,7 +77,7 @@ const Accommodation = (props) => {
     return parseFloat(count.toFixed(2));
   };
 
-  const loading = isLoading || usersLoading || reviewsLoading;
+  const loading = isLoading || usersLoading || reviewsLoading || destinationsLoading;
   if (loading) return <Loading />;
 
   return detail ? (
@@ -90,6 +91,7 @@ const Accommodation = (props) => {
       image={detail?.image}
       latitude={detail?.latitude}
       longitude={detail?.longitude}
+      picID={detail?.picID}
       profile={props.profile}
       distance={countDistance(detail?.latitude, detail?.longitude)}
       avgRating={getRating(detail)}
@@ -174,6 +176,13 @@ const Accommodation = (props) => {
               {data?.map((el) => {
                 return (
                   <Marker key={el.id} position={[el.latitude, el.longitude]} icon={purpleIcon}>
+                    <Popup>{el.name}</Popup>
+                  </Marker>
+                );
+              })}
+              {destinationsData?.map((el) => {
+                return (
+                  <Marker key={el.id} position={[el.latitude, el.longitude]} icon={goldIcon}>
                     <Popup>{el.name}</Popup>
                   </Marker>
                 );
