@@ -705,7 +705,7 @@ const DestinationDetail = (props) => {
                 src={el.name}
                 alt="More imgs"
                 key={el.id}
-                className="w-auto h-auto max-w-[30rem] max-h-[30rem] [@media(min-width:2200px)]:max-w-[20rem] [@media(min-width:2200px)]:max-h-[20rem]"
+                className="w-auto h-auto max-w-[30rem] max-h-[30rem] [@media(min-width:2200px)]:max-w-[25rem] [@media(min-width:2200px)]:max-h-[25rem]"
               />
             );
           })}
