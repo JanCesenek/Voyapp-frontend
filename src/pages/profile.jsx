@@ -54,13 +54,16 @@ const Profile = () => {
     isLoading: notificationsLoading,
   } = useUpdate("/notifications");
   const curUser = data?.find((el) => el.username === curUsername);
+  // states tracking if changing your personal data, boolean
   const [changeEmail, setChangeEmail] = useState(false);
   const [changePhone, setChangePhone] = useState(false);
+  // states tracking changing your personal data, updating its value
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [coords, setCoords] = useState([+lat, +lon]);
+  // boolean values tracking if user chose to add new destination/accommodation, displaying an according form, if true
   const [addDestination, setAddDestination] = useState(false);
   const [addAccommodation, setAddAccommodation] = useState(false);
+  // Add destination form - states tracking input values
   const [destName, setDestName] = useState("");
   const [destImage, setDestImage] = useState("");
   const [destImages, setDestImages] = useState("");
@@ -68,6 +71,8 @@ const Profile = () => {
   const [destStartDate, setDestStartDate] = useState("");
   const [destEndDate, setDestEndDate] = useState("");
   const [destFreeSpots, setDestFreeSpots] = useState(1);
+  const [coords, setCoords] = useState([+lat, +lon]);
+  // Add accommodation form - states tracking input values
   const [accName, setAccName] = useState("");
   const [accImage, setAccImage] = useState("");
   const [accImages, setAccImages] = useState("");
@@ -75,15 +80,23 @@ const Profile = () => {
   const [accDescription, setAccDescription] = useState("");
   const [accPeople, setAccPeople] = useState(1);
   const [accCoords, setAccCoords] = useState([+lat, +lon]);
+  // boolean value tracking if a user is submitting form, if true, disable/grey out button
   const [submitting, setSubmitting] = useState(false);
+  // after successfully submitting a request, a notification appears for 3 sec before slowly fading out
   const [notification, setNotification] = useState(false);
+  // boolean values tracking if user selected to view his data
   const [viewData, setViewData] = useState(false);
   const [viewDestinations, setViewDestinations] = useState(false);
   const [viewAccommodation, setViewAccommodation] = useState(false);
   const [viewDestReservations, setViewDestReservations] = useState(false);
   const [viewAccReservations, setViewAccReservations] = useState(false);
+  const [viewUsers, setViewUsers] = useState(false);
+  // upon clicking on your profile picture, set state to true and allow user to change it
   const [changePic, setChangePic] = useState(false);
   const [editedPic, setEditedPic] = useState(null);
+
+  const getCurUser = data?.find((el) => el.username === curUsername);
+  const admin = getCurUser?.admin;
   const fileInputRef = useRef(null);
   const filesInputRef = useRef(null);
   const accFileInputRef = useRef(null);
@@ -106,6 +119,7 @@ const Profile = () => {
     };
   }, [editedPic]);
 
+  // Search component necessary for creating a search field in Leaflet map allowing user to search for any location all around the world
   const Search = (props) => {
     const map = useMap();
     const { provider } = props;
@@ -468,6 +482,7 @@ const Profile = () => {
       .catch((err) => console.log(`Delete req - ${err}`));
   };
 
+  // ----------------- DATA CHECK -------------------------------------------------------
   const anyNotifications = notificationsData?.find((el) => el.recipient === curUsername);
 
   const anyDestinations = destinationsData?.find((el) => el.userID === curUsername);
@@ -487,6 +502,7 @@ const Profile = () => {
     (el) => el.userID === curUsername || rents.includes(el.postID)
   );
   const anyData = anyDestinations || anyDestinationReservations || anyRents || anyRentReservations;
+  // ----------------------------------------------------------------------------------------
 
   const validDestinationData =
     destName &&
@@ -510,10 +526,12 @@ const Profile = () => {
 
   return curUsername ? (
     <div className="flex relative flex-col [&>*]:my-2 items-center [&>*]:w-3/5 min-w-[30rem] mt-20 bg-gradient-to-b from-black/5 via-black/70 to-black/5 rounded-lg p-5">
+      {/* DELETE USER BUTTON */}
       <FaWindowClose
         className="absolute top-5 right-[-5rem] hover:cursor-pointer"
         onClick={() => deleteUser(curUsername)}
       />
+      {/* PROFILE PIC, FIRST+LAST NAME */}
       <div className="flex justify-center items-center text-[2rem] mx-5 !w-full border-b border-white pb-5">
         <div>
           <img
@@ -606,6 +624,7 @@ const Profile = () => {
           </span>
         </div>
       )}
+      {/* IF ANYONE CANCELLED YOUR RESERVATION OR RESERVED A SPOT IN ANY OF YOUR POSTS, YOU GET A PENDING NOTIFICATION, CLICK ON IT TO DELETE IT */}
       {anyNotifications && (
         <div className="my-10">
           {notificationsData?.map((el) => {
@@ -624,6 +643,7 @@ const Profile = () => {
           })}
         </div>
       )}
+      {/* BUTTON FOR ADDING DESTINATION - VISIBLE ONLY IF NOT ADDING ACCOMMODATION, NOR VIEWING DATA */}
       {!addAccommodation && !viewData && (
         <p
           className="text-green-400 underline hover:cursor-pointer !w-auto self-center"
@@ -633,6 +653,7 @@ const Profile = () => {
           {addDestination ? "Hide" : "Add new destination"}
         </p>
       )}
+      {/* FORM FOR ADDING DESTINATION */}
       {addDestination && (
         <div className="flex flex-col [&>*]:my-2 bg-gradient-to-b from-black/50 to-green-500/30 shadow-black/50 shadow-lg rounded-lg p-5 !w-full">
           <div className="flex items-center">
@@ -778,6 +799,7 @@ const Profile = () => {
           />
         </div>
       )}
+      {/* BUTTON FOR ADDING ACCOMMODATION - VISIBLE ONLY IF NOT ADDING DESTINATION, NOR VIEWING DATA */}
       {!addDestination && !viewData && (
         <p
           className="text-green-400 underline hover:cursor-pointer !w-auto self-center"
@@ -787,6 +809,7 @@ const Profile = () => {
           {addAccommodation ? "Hide" : "Add new accommodation"}
         </p>
       )}
+      {/* FORM FOR ADDING ACCOMMODATION */}
       {addAccommodation && (
         <div className="flex flex-col [&>*]:my-2 bg-gradient-to-b from-black/50 to-green-500/30 shadow-black/50 shadow-lg rounded-lg p-5 !w-[85%] sm:!w-full">
           <div className="flex items-center">
@@ -919,6 +942,7 @@ const Profile = () => {
           />
         </div>
       )}
+      {/* BUTTON FOR VIEWING DATA - VISIBLE ONLY IF NOT ADDING DESTINATION NOR ACCOMMODATION AND HAVING ANY DATA */}
       {anyData && !addAccommodation && !addDestination && (
         <p
           className="text-green-400 underline hover:cursor-pointer !w-auto self-center text-[1.5rem]"
@@ -932,6 +956,7 @@ const Profile = () => {
           {viewData ? "Hide data" : "View data"}
         </p>
       )}
+      {/* IF VIEWING DATA, SHOWS OTHER BUTTONS DISPLAYING SPECIFIC DATA, THOSE BUTTONS ARE VISIBLE ONLY IF YOU HAVE THAT SPECIFIC DATA */}
       {viewData && (
         <div className="flex flex-col [&>*]:my-5 !w-full p-5">
           {!viewAccommodation &&
@@ -971,6 +996,13 @@ const Profile = () => {
                 Your accommodation reservations
               </p>
             )}
+          {admin && (
+            <p
+              className="text-green-200 underline hover:cursor-pointer self-center"
+              onClick={() => setViewUsers(!viewUsers)}>
+              View all users
+            </p>
+          )}
           {anyDestinations && viewDestinations && <Destinations profile />}
           {anyRents && viewAccommodation && <Accommodation profile />}
           {anyDestinationReservations && viewDestReservations && (
@@ -1081,6 +1113,32 @@ const Profile = () => {
                           onClick={() => deleteAccReservation(el.id)}
                         />
                       </p>
+                    </div>
+                  );
+                }
+              })}
+            </div>
+          )}
+          {viewUsers && (
+            <div className="flex flex-col">
+              {data?.map((el) => {
+                if (el.username !== curUsername) {
+                  return (
+                    <div
+                      key={el.id}
+                      className="flex justify-around items-center my-2 rounded-md bg-gradient-to-b from-black/50 to-green-500/30 shadow-black/50 shadow-md p-5">
+                      <img
+                        src={el.profilePicture}
+                        alt="profile pic"
+                        className="w-auto h-auto max-w-[2rem] max-h-[2rem]"
+                      />
+                      <p>
+                        {el.firstName} {el.lastName}
+                      </p>
+                      <FaWindowClose
+                        className="w-5 h-5 text-red-600 hover:cursor-pointer"
+                        onClick={() => deleteUser(el.username)}
+                      />
                     </div>
                   );
                 }

@@ -18,16 +18,21 @@ const Destinations = (props) => {
   const { data: likesData, isLoading: likesLoading } = useUpdate("/likes");
   const { data: dislikesData, isLoading: dislikesLoading } = useUpdate("/dislikes");
   const { data: rentsData, isLoading: rentsLoading } = useUpdate("/rents");
+  // if true, show a specific trip suggestion, else show a list of all trip suggestions
   const [detail, setDetail] = useState(false);
+  // state tracking if a user wishes to add filter
   const [addFilter, setAddFilter] = useState(false);
+  // states tracking values for filtering trip suggestions
   const [filterValue, setFilterValue] = useState("");
   const [comparisonValue, setComparisonValue] = useState("=");
   const [numberValue, setNumberValue] = useState(1);
   const [textValue, setTextValue] = useState("");
   const [coords, setCoords] = useState([+lat, +lon]);
+  // notifications appearing for 3 seconds after updating/deleting a post then fading out slowly
   const [notification, setNotification] = useState(false);
   const [editNotification, setEditNotification] = useState(false);
 
+  // Search component necessary for creating a search field in Leaflet map allowing user to search for any location all around the world
   const Search = (props) => {
     const map = useMap();
     const { provider } = props;
@@ -50,6 +55,7 @@ const Destinations = (props) => {
     return null;
   };
 
+  // Function counting how far away is a certain trip suggestion from your current location or location specified on the map
   const countDistance = (latitude, longitude) => {
     const deg2rad = (deg) => {
       return deg * (Math.PI / 180);
@@ -75,6 +81,7 @@ const Destinations = (props) => {
     });
     return count;
   };
+
   const countDislikes = (id) => {
     let count = 0;
     dislikesData?.map((arg) => {
@@ -114,6 +121,7 @@ const Destinations = (props) => {
           {addFilter ? "Hide filter" : "Add filter"}
         </p>
       )}
+      {/* FILTER */}
       {addFilter && (
         <div className="flex flex-col items-center mb-10 mt-5 bg-gradient-to-b from-black/70 to bg-green-800/50 p-5 rounded-lg">
           <div className="flex flex-col [&>*]:my-2 md:flex-row items-center my-5">

@@ -12,6 +12,8 @@ import { BsHourglassSplit } from "react-icons/bs";
 function App() {
   const loggedIn = localStorage.getItem("token");
   const [log, setLog] = useState(loggedIn);
+
+  // Refreshing all data
   useEffect(() => {
     api
       .get("/users")
@@ -55,6 +57,7 @@ function App() {
       .catch((err) => console.log(`Get req err - ${err}`));
   }, []);
 
+  // Asking user for location - if blocked, coordinates set to 0,0 by default
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       function (pos) {
@@ -70,12 +73,14 @@ function App() {
     );
   }
 
+  // Custom element to prevent 405 from appearing when creating a new account - temporary solution
   const CustomElement = () => {
     const error = useRouteError();
     console.error(error);
     return <BsHourglassSplit className="mt-10 w-[4rem] h-[4rem] animate-spin" />;
   };
 
+  // All paths
   const router = createBrowserRouter([
     {
       path: "/",

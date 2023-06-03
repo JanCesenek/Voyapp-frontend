@@ -17,16 +17,21 @@ const Accommodation = (props) => {
   const { data: usersData, isLoading: usersLoading } = useUpdate("/users");
   const { data: reviewsData, isLoading: reviewsLoading } = useUpdate("/reviews");
   const { data: destinationsData, isLoading: destinationsLoading } = useUpdate("/destinations");
+  // if true, show a specific accommodation, else list all accommodations
   const [detail, setDetail] = useState(false);
+  // state tracking if a  user wishes to add filter
   const [addFilter, setAddFilter] = useState(false);
+  // states tracking values for filtering accommodation
   const [filterValue, setFilterValue] = useState("");
   const [comparisonValue, setComparisonValue] = useState("=");
   const [numberValue, setNumberValue] = useState(1);
   const [textValue, setTextValue] = useState("");
   const [coords, setCoords] = useState([+lat, +lon]);
+  // notifications appearing for 3 seconds after updating/deleting a post then fading out slowly
   const [notification, setNotification] = useState(false);
   const [editNotification, setEditNotification] = useState(false);
 
+  // Search component necessary for creating a search field in Leaflet map allowing user to search for any location all around the world
   const Search = (props) => {
     const map = useMap();
     const { provider } = props;
@@ -108,6 +113,7 @@ const Accommodation = (props) => {
           {addFilter ? "Hide filter" : "Add filter"}
         </p>
       )}
+      {/* FILTER */}
       {addFilter && (
         <div className="flex flex-col items-center mb-10 mt-5 bg-gradient-to-b from-black/70 to bg-green-800/50 p-5 rounded-lg">
           <div className="flex flex-col [&>*]:my-2 md:flex-row items-center my-5">
