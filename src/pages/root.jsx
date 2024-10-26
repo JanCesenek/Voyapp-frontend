@@ -2,8 +2,24 @@ import React from "react";
 import MainNavigation from "../components/mainNavigation";
 import { Outlet } from "react-router-dom";
 import { GiGlobe } from "react-icons/gi";
+import jwt_decode from "jwt-decode";
 
 const RootLayout = (props) => {
+  const token = localStorage.getItem("token");
+  const decodedToken = jwt_decode(token);
+  console.log("Decoded Token", decodedToken);
+  let currentDate = new Date();
+
+  const removeBearerToken = () => {
+    delete api.defaults.headers.common["Authorization"];
+  };
+
+  if (decodedToken.exp * 1000 < currentDate.getTime()) {
+    removeBearerToken();
+    localStorage.clear();
+    props.setLog();
+  }
+
   return (
     <div className="bg-gradient-to-b from-black/70 to-green-600/30">
       <div className="min-h-screen [@media(min-width:1700px)]:mx-40 flex flex-col items-center bg-gradient-to-r from-transparent via-black/30">

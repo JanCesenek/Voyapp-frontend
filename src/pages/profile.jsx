@@ -66,7 +66,7 @@ const Profile = () => {
   // Add destination form - states tracking input values
   const [destName, setDestName] = useState("");
   const [destImage, setDestImage] = useState("");
-  const [destImages, setDestImages] = useState("");
+  const [destImages, setDestImages] = useState([]);
   const [destDescription, setDestDescription] = useState("");
   const [destStartDate, setDestStartDate] = useState("");
   const [destEndDate, setDestEndDate] = useState("");
@@ -75,7 +75,7 @@ const Profile = () => {
   // Add accommodation form - states tracking input values
   const [accName, setAccName] = useState("");
   const [accImage, setAccImage] = useState("");
-  const [accImages, setAccImages] = useState("");
+  const [accImages, setAccImages] = useState([]);
   const [accPrice, setAccPrice] = useState(5);
   const [accDescription, setAccDescription] = useState("");
   const [accPeople, setAccPeople] = useState(1);
@@ -278,44 +278,45 @@ const Profile = () => {
     };
     await handleUpload();
 
-    destImages?.map(async (el, i) => {
-      const uniqueID = uuid();
-      const { data, error } = await supabase.storage
-        .from("traveling")
-        .upload(`destinations/${uniqueID}`, destImages[i], {
-          cacheControl: "3600",
-          upsert: false,
-        });
+    destImages &&
+      destImages?.map(async (_, i) => {
+        const uniqueID = uuid();
+        const { data, error } = await supabase.storage
+          .from("traveling")
+          .upload(`destinations/${uniqueID}`, destImages[i], {
+            cacheControl: "3600",
+            upsert: false,
+          });
 
-      const { data: dataGet, error: errorGet } = await supabase.storage
-        .from("traveling")
-        .list("destinations");
+        const { data: dataGet, error: errorGet } = await supabase.storage
+          .from("traveling")
+          .list("destinations");
 
-      if (error) {
-        console.log("Error uploading file...", error);
-      } else {
-        console.log("File uploaded!", data.path);
-      }
+        if (error) {
+          console.log("Error uploading file...", error);
+        } else {
+          console.log("File uploaded!", data.path);
+        }
 
-      if (errorGet) {
-        console.log("Error listing files...", error);
-      } else {
-        console.log("Files listed!", dataGet);
-      }
+        if (errorGet) {
+          console.log("Error listing files...", error);
+        } else {
+          console.log("Files listed!", dataGet);
+        }
 
-      const postReqPayload = {
-        name: `https://cxfluuggeeoujjwckzuu.supabase.co/storage/v1/object/public/traveling/destinations/${uniqueID}`,
-        postID: picID,
-        userID: curUsername,
-      };
+        const postReqPayload = {
+          name: `https://cxfluuggeeoujjwckzuu.supabase.co/storage/v1/object/public/traveling/destinations/${uniqueID}`,
+          postID: picID,
+          userID: curUsername,
+        };
 
-      await api
-        .post("/destination-pictures", postReqPayload, {
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        })
-        .then(async () => await refetchDestinationPictures())
-        .catch((err) => console.log(`Post req - ${err}`));
-    });
+        await api
+          .post("/destination-pictures", postReqPayload, {
+            headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          })
+          .then(async () => await refetchDestinationPictures())
+          .catch((err) => console.log(`Post req - ${err}`));
+      });
 
     const postReqPayload = {
       userID: curUsername,
