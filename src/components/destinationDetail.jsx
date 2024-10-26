@@ -14,7 +14,6 @@ import {
   FaImages,
 } from "react-icons/fa";
 import { HiOutlineMail, HiOutlinePhone } from "react-icons/hi";
-import { WiDayCloudy } from "react-icons/wi";
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
 import { OpenStreetMapProvider, GeoSearchControl } from "leaflet-geosearch";
 import "leaflet-geosearch/dist/geosearch.css";
@@ -712,14 +711,6 @@ const DestinationDetail = (props) => {
           })}
         </div>
       )}
-      <a
-        href={`https://api.openweathermap.org/data/2.5/weather?lat=${props.latitude}&lon=${props.longitude}&appid=75b692a69b44dcf9619364ef241b998b`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center">
-        <WiDayCloudy className="mr-2" />
-        <span>Show weather</span>
-      </a>
     </div>
   );
 };

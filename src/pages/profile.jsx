@@ -278,7 +278,7 @@ const Profile = () => {
     };
     await handleUpload();
 
-    destImages &&
+    const uploadMoreImgs = () => {
       destImages?.map(async (_, i) => {
         const uniqueID = uuid();
         const { data, error } = await supabase.storage
@@ -317,6 +317,8 @@ const Profile = () => {
           .then(async () => await refetchDestinationPictures())
           .catch((err) => console.log(`Post req - ${err}`));
       });
+    };
+    destImages && uploadMoreImgs();
 
     const postReqPayload = {
       userID: curUsername,
