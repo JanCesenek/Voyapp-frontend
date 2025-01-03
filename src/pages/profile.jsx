@@ -15,8 +15,7 @@ import Button from "../components/custom/button";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { OpenStreetMapProvider, GeoSearchControl } from "leaflet-geosearch";
 import "leaflet-geosearch/dist/geosearch.css";
-import { createClient } from "@supabase/supabase-js";
-import { supStorageURL, supStorageKEY } from "../core/supabaseStorage";
+import { supabase } from "../core/supabase";
 import { v4 as uuid } from "uuid";
 import Notification from "../components/notification";
 import Destinations from "./destinations";
@@ -108,8 +107,6 @@ const Profile = () => {
     "https://cxfluuggeeoujjwckzuu.supabase.co/storage/v1/object/public/traveling/userPics/Default6.png";
   const defaultPic = curUser?.gender === "M" ? malePic : femalePic;
   const uniqueID = uuid();
-
-  const supabase = createClient(supStorageURL, supStorageKEY);
 
   useEffect(() => {
     return () => {
@@ -278,7 +275,7 @@ const Profile = () => {
     };
     await handleUpload();
 
-    const uploadMoreImgs = () => {
+    const uploadMoreImgs = async () => {
       destImages?.map(async (_, i) => {
         const uniqueID = uuid();
         const { data, error } = await supabase.storage
@@ -318,7 +315,7 @@ const Profile = () => {
           .catch((err) => console.log(`Post req - ${err}`));
       });
     };
-    destImages && uploadMoreImgs();
+    destImages && (await uploadMoreImgs());
 
     const postReqPayload = {
       userID: curUsername,

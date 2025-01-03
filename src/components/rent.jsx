@@ -3,8 +3,7 @@ import { FaMapMarkerAlt, FaEuroSign, FaSignInAlt, FaWindowClose } from "react-ic
 import { BsStar, BsStarFill, BsStarHalf } from "react-icons/bs";
 import { useUpdate } from "../hooks/use-update";
 import Loading from "./loading";
-import { createClient } from "@supabase/supabase-js";
-import { supStorageURL, supStorageKEY } from "../core/supabaseStorage";
+import { supabase } from "../core/supabase";
 import { api } from "../core/api";
 
 const Rent = (props) => {
@@ -16,8 +15,6 @@ const Rent = (props) => {
   const curUsername = localStorage.getItem("curUser");
   const curUser = usersData?.find((el) => el.username === curUsername);
   const admin = curUser?.admin;
-
-  const supabase = createClient(supStorageURL, supStorageKEY);
 
   const getStars = (el) => {
     if (+el >= 4.75)

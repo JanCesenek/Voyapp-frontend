@@ -9,8 +9,7 @@ import {
 } from "react-icons/fa";
 import { useUpdate } from "../hooks/use-update";
 import Loading from "./loading";
-import { createClient } from "@supabase/supabase-js";
-import { supStorageURL, supStorageKEY } from "../core/supabaseStorage";
+import { supabase } from "../core/supabase";
 import { api } from "../core/api";
 
 const Destination = (props) => {
@@ -23,8 +22,6 @@ const Destination = (props) => {
   const curUsername = localStorage.getItem("curUser");
   const curUser = usersData?.find((el) => el.username === curUsername);
   const admin = curUser?.admin;
-
-  const supabase = createClient(supStorageURL, supStorageKEY);
 
   const likeCount = () => {
     let count = 0;

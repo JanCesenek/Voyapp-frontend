@@ -21,8 +21,7 @@ import Loading from "./loading";
 import Comment from "./comment";
 import Button from "./custom/button";
 import { api } from "../core/api";
-import { createClient } from "@supabase/supabase-js";
-import { supStorageURL, supStorageKEY } from "../core/supabaseStorage";
+import { supabase } from "../core/supabase";
 import { v4 as uuid } from "uuid";
 import Notification from "./notification";
 import { greenIcon, goldIcon, purpleIcon } from "../core/icons";
@@ -49,8 +48,6 @@ const DestinationDetail = (props) => {
   const [coords, setCoords] = useState([props.latitude, props.longitude]);
   const [notification, setNotification] = useState(false);
   const fileInputRef = useRef(null);
-
-  const supabase = createClient(supStorageURL, supStorageKEY);
 
   const { data, isLoading } = useUpdate("/users");
   const {
