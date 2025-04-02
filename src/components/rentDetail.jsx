@@ -22,6 +22,7 @@ import { v4 as uuid } from "uuid";
 import moment from "moment";
 import Notification from "./notification";
 import { greenIcon, purpleIcon, goldIcon } from "../core/icons";
+import supabase from "../core/supabase";
 
 const RentDetail = (props) => {
   const lat = localStorage.getItem("lat");

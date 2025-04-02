@@ -15,7 +15,7 @@ import Button from "../components/custom/button";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { OpenStreetMapProvider, GeoSearchControl } from "leaflet-geosearch";
 import "leaflet-geosearch/dist/geosearch.css";
-import { supabase } from "../core/supabase";
+import supabase from "../core/supabase";
 import { v4 as uuid } from "uuid";
 import Notification from "../components/notification";
 import Destinations from "./destinations";

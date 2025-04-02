@@ -21,7 +21,7 @@ import Loading from "./loading";
 import Comment from "./comment";
 import Button from "./custom/button";
 import { api } from "../core/api";
-import { supabase } from "../core/supabase";
+import supabase from "../core/supabase";
 import { v4 as uuid } from "uuid";
 import Notification from "./notification";
 import { greenIcon, goldIcon, purpleIcon } from "../core/icons";

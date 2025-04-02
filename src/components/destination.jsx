@@ -9,7 +9,7 @@ import {
 } from "react-icons/fa";
 import { useUpdate } from "../hooks/use-update";
 import Loading from "./loading";
-import { supabase } from "../core/supabase";
+import supabase from "../core/supabase";
 import { api } from "../core/api";
 
 const Destination = (props) => {

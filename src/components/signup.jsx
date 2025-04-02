@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Form, useNavigate } from "react-router-dom";
 import Button from "./custom/button";
 import { api } from "../core/api";
-import { supabase } from "../core/supabase";
+import supabase from "../core/supabase";
 import UseInput from "../hooks/use-input";
 import { AiFillCloseCircle } from "react-icons/ai";
 import { BsFillEyeFill, BsFillEyeSlashFill, BsFillFileImageFill } from "react-icons/bs";
