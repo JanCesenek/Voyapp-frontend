@@ -25,6 +25,7 @@
     "react-leaflet": "^4.2.1",
     "react-query": "^3.39.3",
     "react-router-dom": "^6.8.1",
+    "react-toastify": "^11.0.5",
     "uuid": "^9.0.0"
   },
   "devDependencies": {

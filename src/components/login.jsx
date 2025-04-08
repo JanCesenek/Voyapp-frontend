@@ -1,14 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Form, useNavigate } from "react-router-dom";
 import Button from "./custom/button";
 import Submitting from "./submitting";
 import { api } from "../core/api";
+import { AuthContext } from "../context/AuthContext";
 
 const Login = (props) => {
   const [usernameValue, setUsernameValue] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+
+  const { notifyContext } = useContext(AuthContext);
 
   const addBearerToken = (token) => {
     if (!token) {
@@ -31,17 +34,23 @@ const Login = (props) => {
         addBearerToken(token);
         localStorage.setItem("curUser", username);
         localStorage.setItem("token", token);
-        navigate("/");
+        notifyContext("Login successful!", "success");
         props.setLog();
+        navigate("/");
       })
-      .catch((err) => console.log(`Invalid credentials - ${err}`));
-    setIsSubmitting(false);
+      .catch((err) => {
+        console.log(`Invalid credentials - ${err}`);
+        notifyContext("Invalid credentials! Try again...", "error");
+      })
+      .finally(() => {
+        setIsSubmitting(false);
+      });
   };
 
   return (
-    <div className="flex flex-col justify-start items-center">
-      <Form className="border border-white rounded-2xl flex flex-col justify-center items-center p-3 bg-black bg-opacity-40 text-[2rem] mt-10 [&>*]:my-2">
-        <div className="w-full flex justify-between">
+    <div className="flex relative flex-col justify-start items-center">
+      <Form className="rounded-md p-5 flex flex-col justify-center items-center bg-gradient-to-b from-black/50 to-green-800/50 shadow-lg shadow-black text-[2rem] mt-10 [&>*]:my-2">
+        <div className="w-full flex justify-between [&>*]:mx-2">
           <label htmlFor="username">Username:</label>
           <input
             type="text"
@@ -49,10 +58,10 @@ const Login = (props) => {
             name="username"
             value={usernameValue}
             onChange={(e) => setUsernameValue(e.target.value)}
-            className="bg-transparent border border-white"
+            className="bg-black/20 shadow-md shadow-black rounded-md focus:outline-none"
           />
         </div>
-        <div className="w-full flex justify-between">
+        <div className="w-full flex justify-between [&>*]:mx-2">
           <label htmlFor="password">Password:</label>
           <input
             type="password"
@@ -60,7 +69,7 @@ const Login = (props) => {
             name="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="bg-transparent border border-white"
+            className="bg-black/20 shadow-md shadow-black rounded-md focus:outline-none"
           />
         </div>
         <Button
@@ -78,7 +87,7 @@ const Login = (props) => {
         className="mt-5 text-green-400 underline hover:cursor-pointer text-[1.5rem]"
         onClick={props.link}>
         New user? Click here to create an account.
-      </p>{" "}
+      </p>
     </div>
   );
 };

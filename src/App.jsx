@@ -8,6 +8,7 @@ import Accommodation from "./pages/accommodation";
 import Auth from "./pages/auth";
 import { api } from "./core/api";
 import { BsHourglassSplit } from "react-icons/bs";
+import { AuthProvider } from "./context/AuthContext";
 
 function App() {
   const loggedIn = localStorage.getItem("token");
@@ -99,7 +100,11 @@ function App() {
     },
   ]);
 
-  return <RouterProvider router={router} />;
+  return (
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
+  );
 }
 
 export default App;

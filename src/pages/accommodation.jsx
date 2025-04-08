@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useUpdate } from "../hooks/use-update";
 import Loading from "../components/loading";
 import Rent from "../components/rent";
@@ -6,14 +6,18 @@ import RentDetail from "../components/rentDetail";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { OpenStreetMapProvider, GeoSearchControl } from "leaflet-geosearch";
 import "leaflet-geosearch/dist/geosearch.css";
-import Notification from "../components/notification";
 import { greenIcon, purpleIcon, goldIcon } from "../core/icons";
+import supabase from "../core/supabase";
+import { api } from "../core/api";
+import { AuthContext } from "../context/AuthContext";
 
 const Accommodation = (props) => {
+  const { notifyContext } = useContext(AuthContext);
+
   const lat = localStorage.getItem("lat");
   const lon = localStorage.getItem("lon");
   const curUsername = localStorage.getItem("curUser");
-  const { data, isLoading } = useUpdate("/rents");
+  const { data, isLoading, refetch } = useUpdate("/rents");
   const { data: usersData, isLoading: usersLoading } = useUpdate("/users");
   const { data: reviewsData, isLoading: reviewsLoading } = useUpdate("/reviews");
   const { data: destinationsData, isLoading: destinationsLoading } = useUpdate("/destinations");
@@ -27,9 +31,10 @@ const Accommodation = (props) => {
   const [numberValue, setNumberValue] = useState(1);
   const [textValue, setTextValue] = useState("");
   const [coords, setCoords] = useState([+lat, +lon]);
-  // notifications appearing for 3 seconds after updating/deleting a post then fading out slowly
-  const [notification, setNotification] = useState(false);
-  const [editNotification, setEditNotification] = useState(false);
+
+  const [submitting, setSubmitting] = useState(false);
+
+  const token = localStorage.getItem("token");
 
   // Search component necessary for creating a search field in Leaflet map allowing user to search for any location all around the world
   const Search = (props) => {
@@ -82,6 +87,40 @@ const Accommodation = (props) => {
     return parseFloat(count.toFixed(2));
   };
 
+  const deletePost = async (id, image) => {
+    if (window.confirm("Really wanna delete the post?")) {
+      const { data: presentData } = await supabase.storage.from("traveling").list("rents");
+      const curFile = presentData.find((el) => image.includes(el.name));
+      console.log(curFile);
+      const { data, error } = await supabase.storage
+        .from("traveling")
+        .remove([`rents/${curFile.name}`]);
+
+      if (error) {
+        console.log("Error deleting file", error);
+      } else {
+        console.log("File successfully deleted!", data);
+      }
+
+      setSubmitting(true);
+      await api
+        .delete(`/rents/${id}`, {
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        })
+        .then(async () => {
+          await refetch();
+          notifyContext("Post deleted successfully!", "success");
+        })
+        .catch((err) => {
+          console.log(`Delete req - ${err}`);
+          notifyContext("Error deleting post! Try again...", "error");
+        })
+        .finally(() => {
+          setSubmitting(false);
+        });
+    }
+  };
+
   const loading = isLoading || usersLoading || reviewsLoading || destinationsLoading;
   if (loading) return <Loading />;
 
@@ -101,11 +140,12 @@ const Accommodation = (props) => {
       distance={countDistance(detail?.latitude, detail?.longitude)}
       avgRating={getRating(detail)}
       back={() => setDetail(false)}
-      showNotification={() => setEditNotification(true)}
-      hideNotification={() => setEditNotification(false)}
     />
   ) : (
-    <div className="flex flex-col items-center">
+    <div
+      className={`flex flex-col items-center ${
+        submitting && "cursor-not-allowed opacity-70 pointer-events-none"
+      }`}>
       {!props.profile && (
         <p
           className="text-green-400 mt-10 underline hover:cursor-pointer"
@@ -115,13 +155,13 @@ const Accommodation = (props) => {
       )}
       {/* FILTER */}
       {addFilter && (
-        <div className="flex flex-col items-center mb-10 mt-5 bg-gradient-to-b from-black/70 to bg-green-800/50 p-5 rounded-lg">
+        <div className="flex flex-col items-center mb-10 mt-5 bg-gradient-to-b from-black/70 to-green-800/50 p-5 rounded-lg shadow-lg shadow-black">
           <div className="flex flex-col [&>*]:my-2 md:flex-row items-center my-5">
             <p>Filter by:</p>
             <select
               name="select"
               id="select"
-              className="text-black mx-2"
+              className="mx-2 bg-green-800/50 rounded-md shadow-md shadow-black/50 focus:outline-none"
               value={filterValue}
               onChange={(e) => setFilterValue(e.target.value)}>
               <option value="">--- Select your filter ---</option>
@@ -135,7 +175,7 @@ const Accommodation = (props) => {
             {filterValue === "name" && (
               <input
                 type="text"
-                className="bg-transparent border border-white rounded-md"
+                className="bg-green-800/50 shadow-md shadow-black/50 rounded-md focus:outline-none"
                 value={textValue}
                 onChange={(e) => setTextValue(e.target.value)}
               />
@@ -147,7 +187,7 @@ const Accommodation = (props) => {
                 <select
                   name="comparison"
                   id="comparison"
-                  className="mx-2 text-black"
+                  className="mx-2 bg-green-800/50 rounded-md shadow-md shadow-black/50 focus:outline-none"
                   value={comparisonValue}
                   onChange={(e) => setComparisonValue(e.target.value)}>
                   <option value="=">=</option>
@@ -158,7 +198,7 @@ const Accommodation = (props) => {
                   type="number"
                   name="number"
                   id="number"
-                  className="bg-transparent border border-white rounded-md"
+                  className="bg-green-800/50 rounded-md shadow-md shadow-black/50 focus:outline-none px-2 max-w-[5rem]"
                   value={numberValue}
                   min={filterValue === "rating" ? "1" : "0"}
                   max={filterValue === "rating" ? "5" : "30000"}
@@ -200,8 +240,6 @@ const Accommodation = (props) => {
           )}
         </div>
       )}
-      {notification && <Notification message="Post deleted successfully!" delete />}
-      {editNotification && <Notification message="Post updated successfully!" patch />}
       <div
         className={`grid gap-10 mt-10 ${
           props.profile ? "sm:grid-cols-2" : "2xl:grid-cols-4 lg:grid-cols-3 sm:grid-cols-2"
@@ -223,8 +261,7 @@ const Accommodation = (props) => {
               distance={countDistance(el.latitude, el.longitude)}
               avgRating={getRating(el)}
               showDetails={() => setDetail(el)}
-              showNotification={() => setNotification(true)}
-              hideNotification={() => setNotification(false)}
+              deletePost={() => deletePost(el.id, el.image)}
             />
           );
           if (props.profile) {

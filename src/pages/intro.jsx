@@ -10,7 +10,7 @@ const Intro = () => {
   if (isLoading) return <Loading />;
 
   return (
-    <div className="flex flex-col xl:w-3/4 text-[1.5rem] my-20 bg-gradient-to-b from-black/70 to-green-700/50 shadow-black/50 shadow-lg rounded-lg p-10">
+    <div className="flex flex-col xl:w-3/4 text-[1.5rem] my-20 bg-gradient-to-b from-black/80 to-green-700/60 shadow-black shadow-lg rounded-lg p-10">
       <img
         src={adminPic}
         alt="admin pic"

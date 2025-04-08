@@ -59,7 +59,10 @@ const MainNavigation = (props) => {
           Accommodation
         </NavLink>
         {props.log ? (
-          <NavLink className="border border-white px-2 rounded-md" onClick={logOut} to="/auth">
+          <NavLink
+            className="bg-black/40 px-2 rounded-md h-max shadow-md shadow-green-600/50"
+            onClick={logOut}
+            to="/auth">
             Log Out
           </NavLink>
         ) : (
@@ -123,7 +126,7 @@ const MainNavigation = (props) => {
         </div>
         {props.log ? (
           <NavLink
-            className="border border-white px-2 rounded-md h-max"
+            className="bg-black/40 px-2 rounded-md h-max shadow-md shadow-green-600/50"
             onClick={logOut}
             to="/auth">
             Log Out

@@ -6,8 +6,9 @@ import supabase from "../core/supabase";
 import UseInput from "../hooks/use-input";
 import { AiFillCloseCircle } from "react-icons/ai";
 import { BsFillEyeFill, BsFillEyeSlashFill, BsFillFileImageFill } from "react-icons/bs";
+import { FaCheckCircle } from "react-icons/fa";
+import { MdError } from "react-icons/md";
 import { useUpdate } from "../hooks/use-update";
-// import Submitting from "./custom/submitting";
 import { v4 as uuid } from "uuid";
 
 const SignUp = (props) => {
@@ -96,6 +97,8 @@ const SignUp = (props) => {
   const fileInputRef = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+
+  const [notification, setNotification] = useState(false);
 
   const { refetch } = useUpdate("/users");
 
@@ -190,11 +193,29 @@ const SignUp = (props) => {
         localStorage.setItem("token", token);
         localStorage.setItem("curUser", username);
         resetForm();
-        navigate("/");
         props.setLog();
+        props.showNotification(
+          <div className="flex items-center">
+            <FaCheckCircle />
+            <span>Signed up successfully!</span>
+          </div>
+        );
+        setTimeout(() => {
+          navigate("/");
+        }, 3000);
       })
-      .catch((err) => console.log(`Post req err - ${err}`));
-    setIsSubmitting(false);
+      .catch((err) => {
+        console.log(`Post req err - ${err}`);
+        props.showNotification(
+          <div className="flex items-center">
+            <MdError />
+            <span>Invalid credentials!</span>
+          </div>
+        );
+      })
+      .finally(() => {
+        setIsSubmitting(false);
+      });
   };
 
   const validForm =
@@ -207,7 +228,7 @@ const SignUp = (props) => {
 
   return (
     <div className="flex flex-col items-center text-[1.3rem]">
-      <div className="w-[50rem] mt-10 bg-black bg-opacity-50 px-5 py-2 rounded-2xl border border-white">
+      <div className="w-[50rem] mt-10 bg-gradient-to-b from-black/50 to-green-800/50 shadow-lg shadow-black px-5 py-2 rounded-md">
         <h2 className="text-[2rem] text-center">Validation rules:</h2>
         <p>First name, Last name: 2-30 characters, letters only</p>
         <p>Username: 6-16 characters, upper+lowercase and at least one number</p>
@@ -215,12 +236,12 @@ const SignUp = (props) => {
           Password: 8-16 characters, must contain lower+uppercase, number and a special character
         </p>
         <p>Profile pic: voluntary, if none provided, default will be used based on gender</p>
-        <p className="text-yellow-400 font-bold">
+        <p className="text-green-400 font-bold">
           Note: It won't be possible to submit the form until the conditions are met!
         </p>
       </div>
-      <div className="w-[50rem] border rounded-md mt-10 bg-black bg-opacity-50">
-        <Form method="post" className="flex flex-col items-start [&>*]:my-1 p-2 text-[1.8rem]">
+      <div className="w-[50rem] bg-gradient-to-b from-black/50 to-green-800/50 shadow-lg shadow-black rounded-md mt-10 bg-black bg-opacity-50 p-5">
+        <Form method="post" className="flex flex-col items-start [&>*]:my-2 p-2 text-[1.8rem]">
           <div className="flex">
             <label htmlFor="firstName" className="min-w-[15rem] ml-2">
               First name:
@@ -232,8 +253,8 @@ const SignUp = (props) => {
               value={firstNameValue}
               onChange={firstNameChangeHandler}
               onBlur={firstNameBlurHandler}
-              className={`bg-transparent border border-white ${
-                firstNameHasError && "!border-red-600"
+              className={`bg-green-800/30 shadow-md shadow-green-800/50 rounded-md focus:outline-none ${
+                firstNameHasError && "border !border-green-300 animate-pulse"
               }`}
             />
           </div>
@@ -248,8 +269,8 @@ const SignUp = (props) => {
               value={lastNameValue}
               onChange={lastNameChangeHandler}
               onBlur={lastNameBlurHandler}
-              className={`bg-transparent border border-white ${
-                lastNameHasError && "!border-red-600"
+              className={`bg-green-800/30 shadow-md shadow-green-800/50 rounded-md focus:outline-none ${
+                lastNameHasError && "border !border-green-300 animate-pulse"
               }`}
             />
           </div>
@@ -264,8 +285,8 @@ const SignUp = (props) => {
               value={usernameValue}
               onChange={usernameChangeHandler}
               onBlur={usernameBlurHandler}
-              className={`bg-transparent border border-white ${
-                usernameHasError && "!border-red-600"
+              className={`bg-black/20 shadow-md shadow-black rounded-md focus:outline-none ${
+                usernameHasError && "border !border-green-300 animate-pulse"
               }`}
             />
           </div>
@@ -280,8 +301,8 @@ const SignUp = (props) => {
               value={passwordValue}
               onChange={passwordChangeHandler}
               onBlur={passwordBlurHandler}
-              className={`bg-transparent border border-white ${
-                passwordHasError && "!border-red-600"
+              className={`bg-black/20 shadow-md shadow-black rounded-md focus:outline-none ${
+                passwordHasError && "border !border-green-300 animate-pulse"
               }`}
             />
             {passwordVisibility ? (
@@ -330,7 +351,7 @@ const SignUp = (props) => {
               id="gender"
               value={gender}
               onChange={(e) => setGender(e.target.value)}
-              className="text-black">
+              className="bg-black/20 shadow-md shadow-black rounded-md focus:outline-none">
               <option value="M">M</option>
               <option value="F">F</option>
             </select>
@@ -346,7 +367,9 @@ const SignUp = (props) => {
               value={emailValue}
               onChange={emailChangeHandler}
               onBlur={emailBlurHandler}
-              className={`bg-transparent border border-white ${emailHasError && "!border-red-600"}`}
+              className={`bg-black/20 shadow-md shadow-black rounded-md focus:outline-none ${
+                emailHasError && "border !border-green-300 animate-pulse"
+              }`}
             />
           </div>
           <div className="flex">
@@ -360,7 +383,9 @@ const SignUp = (props) => {
               value={phoneValue}
               onChange={phoneChangeHandler}
               onBlur={phoneBlurHandler}
-              className={`bg-transparent border border-white ${phoneHasError && "!border-red-600"}`}
+              className={`bg-black/20 shadow-md shadow-black rounded-md focus:outline-none ${
+                phoneHasError && "border !border-green-300 animate-pulse"
+              }`}
             />
           </div>
           <Button
@@ -375,9 +400,9 @@ const SignUp = (props) => {
       </div>
       {/* {isSubmitting && <Submitting />} */}
       <p
-        className="mt-5 text-green-400 underline hover:cursor-pointer text-[1.5rem]"
+        className="my-10 text-green-400 underline hover:cursor-pointer text-[1.5rem]"
         onClick={props.link}>
-        Back
+        Already have an account? Click here to log in!
       </p>
     </div>
   );

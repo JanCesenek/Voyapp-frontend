@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { useUpdate } from "../hooks/use-update";
 import { BsFillFileImageFill } from "react-icons/bs";
 import {
@@ -23,10 +23,12 @@ import Button from "./custom/button";
 import { api } from "../core/api";
 import supabase from "../core/supabase";
 import { v4 as uuid } from "uuid";
-import Notification from "./notification";
 import { greenIcon, goldIcon, purpleIcon } from "../core/icons";
+import { AuthContext } from "../context/AuthContext";
 
 const DestinationDetail = (props) => {
+  const { notifyContext } = useContext(AuthContext);
+
   const lat = localStorage.getItem("lat");
   const lon = localStorage.getItem("lon");
   const curUsername = localStorage.getItem("curUser");
@@ -46,7 +48,6 @@ const DestinationDetail = (props) => {
   const [endDate, setEndDate] = useState();
   const [freeSpots, setFreeSpots] = useState(props.freeSpots);
   const [coords, setCoords] = useState([props.latitude, props.longitude]);
-  const [notification, setNotification] = useState(false);
   const fileInputRef = useRef(null);
 
   const { data, isLoading } = useUpdate("/users");
@@ -90,7 +91,6 @@ const DestinationDetail = (props) => {
       map.on("moveend", () => {
         const center = map.getCenter();
         setCoords([center.lat, center.lng]);
-        setAccCoords([center.lat, center.lng]);
       });
 
       return () => map.removeControl(searchControl);
@@ -159,8 +159,9 @@ const DestinationDetail = (props) => {
 
       if (error) {
         console.log("Error uploading file...", error);
-        alert(
-          "Could not upload the file. A file with the same name most likely already exists. Try to rename the file and see if the issues persists!"
+        notifyContext(
+          "Could not upload the file. A file with the same name most likely already exists. Try to rename the file and see if the issues persists!",
+          "error"
         );
       } else {
         console.log("File uploaded!", data.path);
@@ -187,15 +188,19 @@ const DestinationDetail = (props) => {
       .patch(`/destinations/${props.id}`, patchReqPayload, {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       })
-      .then(async () => await refetchDestinations())
-      .catch((err) => console.log(`Patch req - ${err}`));
-    setSubmitting(false);
-    setEditPost(false);
-    props.showNotification();
-    setTimeout(() => {
-      props.hideNotification();
-    }, 3000);
-    props.back();
+      .then(async () => {
+        await refetchDestinations();
+        notifyContext("Post updated successfully!", "success");
+      })
+      .catch((err) => {
+        console.log(`Patch req - ${err}`);
+        notifyContext("Failed to update the post!", "error");
+      })
+      .finally(() => {
+        setSubmitting(false);
+        setEditPost(false);
+        props.back();
+      });
   };
 
   const likePost = async () => {
@@ -206,6 +211,7 @@ const DestinationDetail = (props) => {
       (el) => el.postID === props.id && el.userID === curUsername
     );
 
+    setSubmitting(true);
     if (alreadyLiked) {
       await api
         .delete(`/likes/${alreadyLiked?.id}`, {
@@ -242,6 +248,7 @@ const DestinationDetail = (props) => {
         .then(async () => await refetchLikes())
         .catch((err) => console.log(`Post req - ${err}`));
     }
+    setSubmitting(false);
   };
 
   const dislikePost = async () => {
@@ -252,6 +259,7 @@ const DestinationDetail = (props) => {
       (el) => el.postID === props.id && el.userID === curUsername
     );
 
+    setSubmitting(true);
     if (alreadyDisliked) {
       await api
         .delete(`/dislikes/${alreadyDisliked?.id}`, {
@@ -288,6 +296,7 @@ const DestinationDetail = (props) => {
         .then(async () => await refetchDislikes())
         .catch((err) => console.log(`Post req - ${err}`));
     }
+    setSubmitting(false);
   };
 
   const commentPost = async () => {
@@ -302,11 +311,19 @@ const DestinationDetail = (props) => {
       .post("/comments", postReqPayload, {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       })
-      .then(async () => await refetchComments())
-      .catch((err) => console.log(`Post req - ${err}`));
-    setMessage("");
-    setAddComment(false);
-    setSubmitting(false);
+      .then(async () => {
+        await refetchComments();
+        notifyContext("Comment added successfully!", "success");
+      })
+      .catch((err) => {
+        console.log(`Post req - ${err}`);
+        notifyContext("Failed to add a comment!", "error");
+      })
+      .finally(() => {
+        setMessage("");
+        setAddComment(false);
+        setSubmitting(false);
+      });
   };
 
   const anyReservations = reservationsData?.find((el) => el.postID === props.id);
@@ -340,14 +357,28 @@ const DestinationDetail = (props) => {
       .post("/destination-reservations", postReqPayload, {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       })
-      .then(async () => await refetchReservations())
-      .catch((err) => console.log(`Post req - ${err}`));
-    setAddReservation(false);
-    setSubmitting(false);
-    setNotification(true);
-    setTimeout(() => {
-      setNotification(false);
-    }, 3000);
+      .then(async () => {
+        await refetchReservations();
+        notifyContext("Reservation created successfully!", "success");
+      })
+      .catch((err) => {
+        console.log(`Post req - ${err}`);
+        notifyContext("Failed to create a reservation!", "error");
+      })
+      .finally(() => {
+        setAddReservation(false);
+        setSubmitting(false);
+      });
+  };
+
+  const showFormHideComments = () => {
+    setAddComment(true);
+    setViewComments(false);
+  };
+
+  const showCommentsHideForm = () => {
+    setAddComment(false);
+    setViewComments(!viewComments);
   };
 
   const loading =
@@ -362,7 +393,7 @@ const DestinationDetail = (props) => {
   if (loading) return <Loading />;
 
   return editPost ? (
-    <div className="flex relative flex-col [&>*]:my-2 bg-gradient-to-b from-black/50 to-green-500/30 shadow-black/50 shadow-xl rounded-lg p-5 !w-full">
+    <div className="flex relative flex-col [&>*]:my-2 bg-gradient-to-b from-black/50 to-green-500/30 shadow-black shadow-xl rounded-lg p-5 !w-full">
       <FaSignOutAlt
         className="absolute top-5 right-5 hover:cursor-pointer text-[1.5rem]"
         onClick={() => setEditPost(false)}
@@ -374,7 +405,7 @@ const DestinationDetail = (props) => {
         <input
           type="text"
           id="name"
-          className="bg-transparent border border-white rounded-md"
+          className="bg-green-600/20 shadow-md shadow-green-600/50 rounded-md focus:outline-none"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
@@ -411,7 +442,7 @@ const DestinationDetail = (props) => {
         <textarea
           name="description"
           id="description"
-          className="bg-transparent border border-white rounded-md w-[15rem] h-[7rem]"
+          className="bg-green-600/20 shadow-md shadow-green-600/50 rounded-md focus:outline-none w-[15rem] h-[7rem]"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
@@ -426,7 +457,7 @@ const DestinationDetail = (props) => {
           value={startDate}
           onChange={(e) => setStartDate(e.target.value)}
           id="startDate"
-          className="bg-transparent border border-white rounded-md"
+          className="bg-green-600/20 shadow-md shadow-green-600/50 rounded-md focus:outline-none"
         />
       </div>
       <div className="flex items-center">
@@ -439,7 +470,7 @@ const DestinationDetail = (props) => {
           value={endDate}
           onChange={(e) => setEndDate(e.target.value)}
           id="endDate"
-          className="bg-transparent border border-white rounded-md"
+          className="bg-green-600/20 shadow-md shadow-green-600/50 rounded-md focus:outline-none"
         />
       </div>
       <div className="flex items-center">
@@ -452,7 +483,7 @@ const DestinationDetail = (props) => {
           value={freeSpots}
           onChange={(e) => setFreeSpots(e.target.value)}
           id="freeSpots"
-          className="bg-transparent border border-white rounded-md"
+          className="bg-green-600/20 shadow-md shadow-green-600/50 rounded-md focus:outline-none max-w-[3rem] px-2"
         />
       </div>
       <div className="flex items-center">
@@ -493,7 +524,10 @@ const DestinationDetail = (props) => {
       />
     </div>
   ) : (
-    <div className="relative flex flex-col items-center bg-gradient-to-b from-black/70 to-green-700/50 shadow-black/50 shadow-xl rounded-md p-5 my-20 [&>*]:my-2">
+    <div
+      className={`relative flex flex-col items-center bg-gradient-to-b from-black/80 to-green-700/60 shadow-black shadow-xl rounded-md p-5 my-20 [&>*]:my-2 ${
+        submitting && "cursor-not-allowed opacity-70 pointer-events-none"
+      }`}>
       <FaSignOutAlt
         className="absolute top-5 right-5 hover:cursor-pointer text-[1.5rem]"
         onClick={props.back}
@@ -630,9 +664,7 @@ const DestinationDetail = (props) => {
           />
           <p>{dislikeCount()}</p>
         </div>
-        <div
-          className="flex items-center hover:cursor-pointer"
-          onClick={() => setViewComments(!viewComments)}>
+        <div className="flex items-center hover:cursor-pointer" onClick={showCommentsHideForm}>
           <p>Comments: {commentCount()}</p>
           <FaComment className="ml-2" />
         </div>
@@ -641,10 +673,10 @@ const DestinationDetail = (props) => {
         (addComment ? (
           <FaCommentSlash className="hover:cursor-pointer" onClick={() => setAddComment(false)} />
         ) : (
-          <FaCommentMedical className="hover:cursor-pointer" onClick={() => setAddComment(true)} />
+          <FaCommentMedical className="hover:cursor-pointer" onClick={showFormHideComments} />
         ))}
       {viewComments && commentCount() > 0 && (
-        <div className="mt-2 border-t border-green-600">
+        <div>
           {commentsData?.map((el) => {
             if (el.postID === props.id) {
               const commentOwner = data?.find((arg) => arg.username === el.userID);
@@ -665,14 +697,14 @@ const DestinationDetail = (props) => {
       )}
       {addComment && token && (
         <div className="flex flex-col p-5 [&>*]:my-2 bg-gradient-to-b from-black/50 to-green-700/30 shadow-black/50 shadow-lg rounded-lg">
-          <div className="flex items-center">
+          <div className="flex items-center [&>*]:px-2">
             <label htmlFor="msg">Message:</label>
             <textarea
               name="msg"
               id="msg"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              className="bg-transparent border border-white rounded-md w-[20rem] h-[5rem]"
+              className="bg-black/20 shadow-md shadow-black rounded-md w-[30rem] h-[10rem] focus:outline-none p-5"
             />
           </div>
           <Button
@@ -691,7 +723,6 @@ const DestinationDetail = (props) => {
           Edit post
         </p>
       )}
-      {notification && <Notification className="top-[-4rem]" message="Reserved!" post />}
       {morePics && (
         <div
           className="fixed grid md:grid-cols-2 2xl:grid-cols-3 [@media(min-width:2000px)]:grid-cols-4 gap-10 top-0 z-[1000] bg-black/80 p-10 hover:cursor-pointer w-[40rem] sm:w-full h-full"

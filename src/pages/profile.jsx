@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { useUpdate } from "../hooks/use-update";
 import Loading from "../components/loading";
 import { AiFillCloseCircle } from "react-icons/ai";
@@ -17,13 +17,16 @@ import { OpenStreetMapProvider, GeoSearchControl } from "leaflet-geosearch";
 import "leaflet-geosearch/dist/geosearch.css";
 import supabase from "../core/supabase";
 import { v4 as uuid } from "uuid";
-import Notification from "../components/notification";
 import Destinations from "./destinations";
 import Accommodation from "./accommodation";
-import { FaWindowClose } from "react-icons/fa";
+import Notification from "../components/notification";
+import { FaCheckSquare, FaWindowClose, FaEdit } from "react-icons/fa";
 import { greenIcon, goldIcon, purpleIcon } from "../core/icons";
+import { AuthContext } from "../context/AuthContext";
 
 const Profile = () => {
+  const { notifyContext } = useContext(AuthContext);
+
   const curUsername = localStorage.getItem("curUser");
   const token = localStorage.getItem("token");
   const lat = localStorage.getItem("lat");
@@ -81,8 +84,6 @@ const Profile = () => {
   const [accCoords, setAccCoords] = useState([+lat, +lon]);
   // boolean value tracking if a user is submitting form, if true, disable/grey out button
   const [submitting, setSubmitting] = useState(false);
-  // after successfully submitting a request, a notification appears for 3 sec before slowly fading out
-  const [notification, setNotification] = useState(false);
   // boolean values tracking if user selected to view his data
   const [viewData, setViewData] = useState(false);
   const [viewDestinations, setViewDestinations] = useState(false);
@@ -146,6 +147,7 @@ const Profile = () => {
 
   const deleteUser = async (id) => {
     if (window.confirm("Really wanna delete your account?")) {
+      setSubmitting(true);
       await api
         .delete(`/users/${id}`, {
           headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -153,20 +155,15 @@ const Profile = () => {
         .then(async () => {
           await refetch();
           removeBearerToken();
+          notifyContext("User deleted successfully!", "success");
           localStorage.clear();
         })
-        .catch((err) => console.log(`Delete req - ${err}`));
+        .catch((err) => {
+          console.log(`Delete req - ${err}`);
+          notifyContext("User deletion failed!", "error");
+        })
+        .finally(() => setSubmitting(false));
     }
-  };
-
-  const handleFileChange = (e) => {
-    console.log(e.target.files[0]);
-    setDestImage(e.target.files[0]);
-  };
-
-  const handleFilesChange = (e) => {
-    console.log(e.target.files);
-    setDestImages([...destImages, ...e.target.files]);
   };
 
   const handleProfilePic = (e) => {
@@ -200,8 +197,9 @@ const Profile = () => {
 
       if (error) {
         console.log("Error uploading file...", error);
-        alert(
-          "Could not upload the file. A file with the same name most likely already exists. Try to rename the file and see if the issues persists!"
+        notifyContext(
+          "Could not upload the file. A file with the same name most likely already exists. Try to rename the file and see if the issue persists!",
+          "error"
         );
       } else {
         console.log("File uploaded!", data.path);
@@ -213,6 +211,7 @@ const Profile = () => {
         console.log("Files listed!", dataGet);
       }
     }
+    setSubmitting(true);
     await api
       .patch(`/users/${curUsername}`, el, {
         headers: {
@@ -220,10 +219,19 @@ const Profile = () => {
           "Content-Type": "application/json",
         },
       })
-      .then(async () => await refetch())
-      .catch((err) => console.log(`Patch req - ${err}`));
-    setChangeEmail(false);
-    setChangePhone(false);
+      .then(async () => {
+        await refetch();
+        notifyContext("Profile updated successfully!", "success");
+      })
+      .catch((err) => {
+        console.log(`Patch req - ${err}`);
+        notifyContext("Profile update failed!", "error");
+      })
+      .finally(() => {
+        setChangeEmail(false);
+        setChangePhone(false);
+        setSubmitting(false);
+      });
   };
 
   const resetDestinationData = () => {
@@ -312,7 +320,10 @@ const Profile = () => {
             headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
           })
           .then(async () => await refetchDestinationPictures())
-          .catch((err) => console.log(`Post req - ${err}`));
+          .catch((err) => {
+            console.log(`Post req - ${err}`);
+            notifyContext("Uploading pictures failed!", "error");
+          });
       });
     };
     destImages && (await uploadMoreImgs());
@@ -338,16 +349,19 @@ const Profile = () => {
           "Content-Type": "application/json",
         },
       })
-      .then(async () => await refetchDestinations())
-      .catch((err) => console.log(`Post req err - ${err}`));
-    setSubmitting(false);
-
-    resetDestinationData();
-    setAddDestination(false);
-    setNotification(true);
-    setTimeout(() => {
-      setNotification(false);
-    }, 3000);
+      .then(async () => {
+        await refetchDestinations();
+        notifyContext("Destination created successfully!", "success");
+      })
+      .catch((err) => {
+        console.log(`Post req err - ${err}`);
+        notifyContext("Destination creation failed!", "error");
+      })
+      .finally(() => {
+        setSubmitting(false);
+        resetDestinationData();
+        setAddDestination(false);
+      });
   };
 
   const createAccommodation = async () => {
@@ -416,7 +430,10 @@ const Profile = () => {
           headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         })
         .then(async () => await refetchRentPictures())
-        .catch((err) => console.log(`Post req - ${err}`));
+        .catch((err) => {
+          console.log(`Post req - ${err}`);
+          notifyContext("Uploading pictures failed!", "error");
+        });
     });
 
     const postReqPayload = {
@@ -439,16 +456,18 @@ const Profile = () => {
           "Content-Type": "application/json",
         },
       })
-      .then(async () => await refetchRents())
-      .catch((err) => console.log(`Post req err - ${err}`));
+      .then(async () => {
+        await refetchRents();
+        notifyContext("Accommodation created successfully!", "success");
+      })
+      .catch((err) => {
+        console.log(`Post req err - ${err}`);
+        notifyContext("Accommodation creation failed!", "error");
+      });
     setSubmitting(false);
 
     resetAccommodationData();
     setAddAccommodation(false);
-    setNotification(true);
-    setTimeout(() => {
-      setNotification(false);
-    }, 3000);
   };
 
   const deleteDestReservation = async (id) => {
@@ -525,12 +544,17 @@ const Profile = () => {
   if (loading) return <Loading />;
 
   return curUsername ? (
-    <div className="flex relative flex-col [&>*]:my-2 items-center [&>*]:w-3/5 min-w-[30rem] mt-20 bg-gradient-to-b from-black/5 via-black/70 to-black/5 rounded-lg p-5">
+    <div
+      className={`flex relative flex-col [&>*]:my-2 items-center [&>*]:w-3/5 min-w-[30rem] my-20 bg-gradient-to-b from-green-800/20 via-black/70 to-green-800/40 rounded-lg shadow-lg shadow-black p-5 ${
+        submitting && "cursor-not-allowed opacity-70 pointer-events-none"
+      }`}>
       {/* DELETE USER BUTTON */}
-      <FaWindowClose
-        className="absolute top-5 right-[-5rem] hover:cursor-pointer"
-        onClick={() => deleteUser(curUsername)}
-      />
+      {!viewData && !addAccommodation && !addDestination && (
+        <FaWindowClose
+          className="absolute top-0 right-[-8rem] text-[0.8rem] opacity-50 hover:opacity-100 hover:cursor-pointer"
+          onClick={() => deleteUser(curUsername)}
+        />
+      )}
       {/* PROFILE PIC, FIRST+LAST NAME */}
       <div className="flex justify-center items-center text-[2rem] mx-5 !w-full border-b border-white pb-5">
         <div>
@@ -587,7 +611,7 @@ const Profile = () => {
         </div>
       </div>
       {changeEmail ? (
-        <div className="flex items-center">
+        <div className="flex items-center" aria-disabled>
           <input
             type="email"
             value={email}
@@ -633,8 +657,6 @@ const Profile = () => {
                 <Notification
                   key={el.id}
                   message={el.message}
-                  post={el.new ? true : false}
-                  delete={el.new ? false : true}
                   className="!static my-2 hover:cursor-pointer text-[1rem]"
                   onClick={() => deleteNotification(el.id)}
                 />
@@ -663,15 +685,17 @@ const Profile = () => {
             <input
               type="text"
               id="name"
-              className="bg-transparent border border-white rounded-md"
+              className="bg-green-600/20 shadow-md shadow-green-600/50 rounded-md focus:outline-none"
               value={destName}
               onChange={(e) => setDestName(e.target.value)}
             />
           </div>
           <div className="flex items-center">
             <p className="min-w-[7rem]">Image:</p>
-            <label htmlFor="pic" className="flex w-[15rem] text-[1rem] ml-5 hover:cursor-pointer">
-              <BsFillFileImageFill /> {destImage ? destImage.name : "Upload image"}
+            <label
+              htmlFor="pic"
+              className="flex items-center w-[15rem] text-[1rem] ml-5 hover:cursor-pointer">
+              <BsFillFileImageFill /> <span>{destImage ? destImage.name : "Upload image"}</span>
             </label>
             <input
               type="file"
@@ -680,7 +704,7 @@ const Profile = () => {
               size="10"
               className="hidden"
               accept="image/*"
-              onChange={handleFileChange}
+              onChange={(e) => setDestImage(e.target.files[0])}
               ref={fileInputRef}
             />
             {destImage && (
@@ -695,22 +719,29 @@ const Profile = () => {
           </div>
           <div className="flex items-center">
             <p className="min-w-[7rem]">More images (voluntary):</p>
+            <label htmlFor="pics" className="flex w-[15rem] text-[1rem] ml-5 hover:cursor-pointer">
+              <BsFillFileImageFill />{" "}
+              <span>
+                {destImages.length > 0 ? `Images uploaded: ${destImages.length}` : "Upload images"}
+              </span>
+            </label>
             <input
               type="file"
-              name="pic"
-              id="pic"
+              name="pics"
+              id="pics"
               size="10"
+              className="hidden"
               accept="image/*"
               multiple
-              onChange={handleFilesChange}
+              onChange={(e) => setDestImages([...destImages, ...e.target.files])}
               ref={filesInputRef}
             />
-            {destImages && (
+            {destImages.length > 0 && (
               <AiFillCloseCircle
                 className="w-3 h-3 hover:cursor-pointer mr-2"
                 onClick={() => {
                   filesInputRef.current.value = null;
-                  setDestImages(null);
+                  setDestImages([]);
                 }}
               />
             )}
@@ -722,7 +753,7 @@ const Profile = () => {
             <textarea
               name="description"
               id="description"
-              className="bg-transparent border border-white rounded-md w-[15rem] h-[7rem]"
+              className="bg-green-600/20 shadow-md shadow-green-600/50 rounded-md w-[15rem] h-[7rem] focus:outline-none"
               value={destDescription}
               onChange={(e) => setDestDescription(e.target.value)}
             />
@@ -737,7 +768,7 @@ const Profile = () => {
               value={destStartDate}
               onChange={(e) => setDestStartDate(e.target.value)}
               id="startDate"
-              className="bg-transparent border border-white rounded-md"
+              className="bg-green-600/20 shadow-md shadow-green-600/50 rounded-md focus:outline-none"
             />
           </div>
           <div className="flex items-center">
@@ -750,7 +781,7 @@ const Profile = () => {
               value={destEndDate}
               onChange={(e) => setDestEndDate(e.target.value)}
               id="endDate"
-              className="bg-transparent border border-white rounded-md"
+              className="bg-green-600/20 shadow-md shadow-green-600/50 rounded-md focus:outline-none"
             />
           </div>
           <div className="flex items-center">
@@ -763,7 +794,7 @@ const Profile = () => {
               value={destFreeSpots}
               onChange={(e) => setDestFreeSpots(e.target.value)}
               id="freeSpots"
-              className="bg-transparent border border-white rounded-md"
+              className="bg-green-600/20 shadow-md shadow-green-600/50 rounded-md max-w-[3rem] focus:outline-none px-2"
             />
           </div>
           <div className="flex items-center">
@@ -819,15 +850,17 @@ const Profile = () => {
             <input
               type="text"
               id="name"
-              className="bg-transparent border border-white rounded-md"
+              className="bg-green-600/20 shadow-md shadow-green-600/50 rounded-md focus:outline-none"
               value={accName}
               onChange={(e) => setAccName(e.target.value)}
             />
           </div>
           <div className="flex items-center">
             <p className="min-w-[7rem]">Image:</p>
-            <label htmlFor="pic" className="flex w-[15rem] text-[1rem] ml-5 hover:cursor-pointer">
-              <BsFillFileImageFill /> {accImage ? accImage.name : "Upload image"}
+            <label
+              htmlFor="pic"
+              className="flex items-center w-[15rem] text-[1rem] ml-5 hover:cursor-pointer">
+              <BsFillFileImageFill /> <span>{accImage ? accImage.name : "Upload image"}</span>
             </label>
             <input
               type="file"
@@ -851,22 +884,29 @@ const Profile = () => {
           </div>
           <div className="flex items-center">
             <p className="min-w-[7rem]">More images (voluntary):</p>
+            <label htmlFor="pics" className="flex w-[15rem] text-[1rem] ml-5 hover:cursor-pointer">
+              <BsFillFileImageFill />{" "}
+              <span>
+                {accImages.length > 0 ? `Images uploaded: ${accImages.length}` : "Upload images"}
+              </span>
+            </label>
             <input
               type="file"
-              name="pic"
-              id="pic"
+              name="pics"
+              id="pics"
               size="10"
+              className="hidden"
               accept="image/*"
               multiple
               onChange={(e) => setAccImages([...accImages, ...e.target.files])}
               ref={accFilesInputRef}
             />
-            {accImages && (
+            {accImages.length > 0 && (
               <AiFillCloseCircle
                 className="w-3 h-3 hover:cursor-pointer mr-2"
                 onClick={() => {
                   accFilesInputRef.current.value = null;
-                  setAccImages(null);
+                  setAccImages([]);
                 }}
               />
             )}
@@ -881,7 +921,7 @@ const Profile = () => {
               value={accPrice}
               onChange={(e) => setAccPrice(e.target.value)}
               id="price"
-              className="bg-transparent border border-white rounded-md"
+              className="bg-green-600/20 shadow-md shadow-green-600/50 rounded-md focus:outline-none max-w-[3rem] px-2"
             />
           </div>
           <div className="flex items-center">
@@ -891,7 +931,7 @@ const Profile = () => {
             <textarea
               name="description"
               id="description"
-              className="bg-transparent border border-white rounded-md w-[15rem] h-[7rem]"
+              className="bg-green-600/20 shadow-md shadow-green-600/50 rounded-md focus:outline-none w-[15rem] h-[7rem]"
               value={accDescription}
               onChange={(e) => setAccDescription(e.target.value)}
             />
@@ -906,7 +946,7 @@ const Profile = () => {
               value={accPeople}
               onChange={(e) => setAccPeople(e.target.value)}
               id="freeSpots"
-              className="bg-transparent border border-white rounded-md"
+              className="bg-green-600/20 shadow-md shadow-green-600/50 rounded-md focus:outline-none max-w-[3rem] px-2"
             />
           </div>
           <div className="flex items-center">
@@ -962,24 +1002,30 @@ const Profile = () => {
           {!viewAccommodation &&
             !viewDestReservations &&
             !viewAccReservations &&
-            anyDestinations && (
+            anyDestinations &&
+            !viewUsers && (
               <p
                 className="text-green-200 underline hover:cursor-pointer self-center"
                 onClick={() => setViewDestinations(!viewDestinations)}>
                 Your destinations
               </p>
             )}
-          {!viewDestinations && !viewDestReservations && !viewAccReservations && anyRents && (
-            <p
-              className="text-green-200 underline hover:cursor-pointer self-center"
-              onClick={() => setViewAccommodation(!viewAccommodation)}>
-              Your accommodation
-            </p>
-          )}
+          {!viewDestinations &&
+            !viewDestReservations &&
+            !viewAccReservations &&
+            anyRents &&
+            !viewUsers && (
+              <p
+                className="text-green-200 underline hover:cursor-pointer self-center"
+                onClick={() => setViewAccommodation(!viewAccommodation)}>
+                Your accommodation
+              </p>
+            )}
           {!viewAccommodation &&
             !viewDestinations &&
             !viewAccReservations &&
-            anyDestinationReservations && (
+            anyDestinationReservations &&
+            !viewUsers && (
               <p
                 className="text-green-200 underline hover:cursor-pointer self-center"
                 onClick={() => setViewDestReservations(!viewDestReservations)}>
@@ -989,20 +1035,25 @@ const Profile = () => {
           {!viewAccommodation &&
             !viewDestReservations &&
             !viewDestinations &&
-            anyRentReservations && (
+            anyRentReservations &&
+            !viewUsers && (
               <p
                 className="text-green-200 underline hover:cursor-pointer self-center"
                 onClick={() => setViewAccReservations(!viewAccReservations)}>
                 Your accommodation reservations
               </p>
             )}
-          {admin && (
-            <p
-              className="text-green-200 underline hover:cursor-pointer self-center"
-              onClick={() => setViewUsers(!viewUsers)}>
-              View all users
-            </p>
-          )}
+          {admin &&
+            !viewAccommodation &&
+            !viewAccReservations &&
+            !viewDestinations &&
+            !viewDestReservations && (
+              <p
+                className="text-green-200 underline hover:cursor-pointer self-center"
+                onClick={() => setViewUsers(!viewUsers)}>
+                {viewUsers ? "Hide users" : "View all users"}
+              </p>
+            )}
           {anyDestinations && viewDestinations && <Destinations profile />}
           {anyRents && viewAccommodation && <Accommodation profile />}
           {anyDestinationReservations && viewDestReservations && (
@@ -1147,7 +1198,6 @@ const Profile = () => {
           )}
         </div>
       )}
-      {notification && <Notification message="Post created successfully!" post />}
     </div>
   ) : (
     <p className="mt-10">You need to be logged in to view your profile!</p>

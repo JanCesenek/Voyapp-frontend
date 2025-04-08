@@ -17,8 +17,8 @@ const Comment = (props) => {
   };
 
   return (
-    <div className="grid grid-row-1 grid-cols-[3fr,6fr,1fr] items-center py-2 border-b border-green-600 w-[35rem]">
-      <div className="flex items-center">
+    <div className="relative flex flex-col items-center py-2 bg-gradient-to-b from-black/50 to-green-700/50 w-[35rem] shadow-lg shadow-black/50 rounded-lg my-5">
+      <div className="flex justify-center items-center py-5 w-full border-b border-green-500">
         <img
           src={props.profilePicture}
           alt="profile pic"
@@ -26,9 +26,9 @@ const Comment = (props) => {
         />
         <p className="ml-2 text-green-400 font-bold">{props.fullName}</p>
       </div>
-      <p className="ml-5 text-[0.8rem]">{props.message}</p>
+      <p className="my-5 px-5 text-[0.8rem]">{props.message}</p>
       {props.userID === curUsername && (
-        <FaTrash className="hover:cursor-pointer" onClick={deleteComment} />
+        <FaTrash className="hover:cursor-pointer absolute top-5 right-5" onClick={deleteComment} />
       )}
     </div>
   );

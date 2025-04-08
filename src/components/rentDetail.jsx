@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { useUpdate } from "../hooks/use-update";
 import { BsStar, BsStarFill, BsStarHalf, BsFillFileImageFill } from "react-icons/bs";
 import {
@@ -20,11 +20,13 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { v4 as uuid } from "uuid";
 import moment from "moment";
-import Notification from "./notification";
 import { greenIcon, purpleIcon, goldIcon } from "../core/icons";
 import supabase from "../core/supabase";
+import { AuthContext } from "../context/AuthContext";
 
 const RentDetail = (props) => {
+  const { notifyContext } = useContext(AuthContext);
+
   const lat = localStorage.getItem("lat");
   const lon = localStorage.getItem("lon");
   const curUsername = localStorage.getItem("curUser");
@@ -46,7 +48,6 @@ const RentDetail = (props) => {
   const [description, setDescription] = useState(props.description);
   const [freeSpots, setFreeSpots] = useState(props.people);
   const [coords, setCoords] = useState([props.latitude, props.longitude]);
-  const [notification, setNotification] = useState(false);
   const fileInputRef = useRef(null);
   const realStartDate =
     String(startDate).slice(8, 10) +
@@ -92,7 +93,6 @@ const RentDetail = (props) => {
       map.on("moveend", () => {
         const center = map.getCenter();
         setCoords([center.lat, center.lng]);
-        setAccCoords([center.lat, center.lng]);
       });
 
       return () => map.removeControl(searchControl);
@@ -293,8 +293,9 @@ const RentDetail = (props) => {
 
       if (error) {
         console.log("Error uploading file...", error);
-        alert(
-          "Could not upload the file. A file with the same name most likely already exists. Try to rename the file and see if the issues persists!"
+        notifyContext(
+          "Could not upload the file. A file with the same name most likely already exists. Try to rename the file and see if the issues persists!",
+          "error"
         );
       } else {
         console.log("File uploaded!", data.path);
@@ -320,15 +321,19 @@ const RentDetail = (props) => {
       .patch(`/rents/${props.id}`, patchReqPayload, {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       })
-      .then(async () => await refetchRents())
-      .catch((err) => console.log(`Patch req - ${err}`));
-    setSubmitting(false);
-    setEditPost(false);
-    props.showNotification();
-    setTimeout(() => {
-      props.hideNotification();
-    }, 3000);
-    props.back();
+      .then(async () => {
+        await refetchRents();
+        notifyContext("Post updated successfully!", "success");
+      })
+      .catch((err) => {
+        console.log(`Patch req - ${err}`);
+        notifyContext("Failed to update the post!", "error");
+      })
+      .finally(() => {
+        setSubmitting(false);
+        setEditPost(false);
+        props.back();
+      });
   };
 
   const createReservation = async () => {
@@ -346,16 +351,20 @@ const RentDetail = (props) => {
       .post("/rent-reservations", postReqPayload, {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       })
-      .then(async () => await refetchReservations())
-      .catch((err) => console.log(`Post req - ${err}`));
-    setAddReservation(false);
-    setStartDate(null);
-    setEndDate(null);
-    setSubmitting(false);
-    setNotification(true);
-    setTimeout(() => {
-      setNotification(false);
-    }, 3000);
+      .then(async () => {
+        await refetchReservations();
+        notifyContext("Reservation created successfully!", "success");
+      })
+      .catch((err) => {
+        console.log(`Post req - ${err}`);
+        notifyContext("Failed to create a reservation!", "error");
+      })
+      .finally(() => {
+        setAddReservation(false);
+        setStartDate(null);
+        setEndDate(null);
+        setSubmitting(false);
+      });
   };
 
   const reviewCount = () => {
@@ -379,8 +388,14 @@ const RentDetail = (props) => {
       .post("/reviews", postReqPayload, {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       })
-      .then(async () => await refetchReviews())
-      .catch((err) => console.log(`Post req - ${err}`));
+      .then(async () => {
+        await refetchReviews();
+        notifyContext("Review created successfully!", "success");
+      })
+      .catch((err) => {
+        console.log(`Post req - ${err}`);
+        notifyContext("Failed to create a review!", "error");
+      });
     setAddReview(false);
     setSubmitting(false);
   };
@@ -390,7 +405,7 @@ const RentDetail = (props) => {
   if (loading) return <Loading />;
 
   return editPost ? (
-    <div className="flex relative flex-col [&>*]:my-2 bg-gradient-to-b from-black/50 to-green-500/30 shadow-black/50 shadow-xl rounded-lg p-5 !w-full">
+    <div className="flex relative flex-col [&>*]:my-2 bg-gradient-to-b from-black/50 to-green-500/30 shadow-black shadow-xl rounded-lg p-5 !w-full">
       <FaSignOutAlt
         className="absolute top-5 right-5 hover:cursor-pointer text-[1.5rem]"
         onClick={() => setEditPost(false)}
@@ -402,7 +417,7 @@ const RentDetail = (props) => {
         <input
           type="text"
           id="name"
-          className="bg-transparent border border-white rounded-md"
+          className="bg-green-600/20 shadow-md shadow-green-600/50 rounded-md focus:outline-none"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
@@ -442,7 +457,7 @@ const RentDetail = (props) => {
           value={price}
           onChange={(e) => setPrice(e.target.value)}
           id="price"
-          className="bg-transparent border border-white rounded-md"
+          className="bg-green-600/20 shadow-md shadow-green-600/50 rounded-md focus:outline-none max-w-[5rem] px-2"
         />
       </div>
       <div className="flex items-center">
@@ -452,7 +467,7 @@ const RentDetail = (props) => {
         <textarea
           name="description"
           id="description"
-          className="bg-transparent border border-white rounded-md w-[15rem] h-[7rem]"
+          className="bg-green-600/20 shadow-md shadow-green-600/50 rounded-md focus:outline-none w-[15rem] h-[7rem]"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
@@ -467,7 +482,7 @@ const RentDetail = (props) => {
           value={freeSpots}
           onChange={(e) => setFreeSpots(e.target.value)}
           id="freeSpots"
-          className="bg-transparent border border-white rounded-md"
+          className="bg-green-600/20 shadow-md shadow-green-600/50 rounded-md focus:outline-none px-2 max-w-[3rem]"
         />
       </div>
       <div className="flex items-center">
@@ -508,7 +523,10 @@ const RentDetail = (props) => {
       />
     </div>
   ) : (
-    <div className="relative flex flex-col items-center bg-gradient-to-b from-black/70 to-green-700/50 shadow-black/50 shadow-xl rounded-md p-5 my-20 [&>*]:my-2">
+    <div
+      className={`relative flex flex-col items-center bg-gradient-to-b from-black/80 to-green-700/60 shadow-black shadow-xl rounded-md p-5 my-20 [&>*]:my-2 ${
+        submitting && "cursor-not-allowed opacity-70 pointer-events-none"
+      }`}>
       <FaSignOutAlt
         className="absolute top-5 right-5 hover:cursor-pointer text-[1.5rem]"
         onClick={props.back}
@@ -752,7 +770,6 @@ const RentDetail = (props) => {
           Edit post
         </p>
       )}
-      {notification && <Notification className="top-[-4rem]" message="Reserved!" post />}
       {morePics && (
         <div
           className="fixed grid md:grid-cols-2 2xl:grid-cols-3 [@media(min-width:2000px)]:grid-cols-4 gap-10 top-0 z-[1000] bg-black/80 p-10 hover:cursor-pointer w-[40rem] sm:w-full h-full"
