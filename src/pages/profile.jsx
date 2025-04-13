@@ -117,6 +117,11 @@ const Profile = () => {
     };
   }, [editedPic]);
 
+  useEffect(() => {
+    setEmail(curUser?.email);
+    setPhone(curUser?.phone);
+  }, []);
+
   // Search component necessary for creating a search field in Leaflet map allowing user to search for any location all around the world
   const Search = (props) => {
     const map = useMap();
@@ -155,7 +160,7 @@ const Profile = () => {
         .then(async () => {
           await refetch();
           removeBearerToken();
-          notifyContext("User deleted successfully!", "success");
+          notifyContext("User deleted successfully!", "logout");
           localStorage.clear();
         })
         .catch((err) => {

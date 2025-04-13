@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { Form, useNavigate } from "react-router-dom";
 import Button from "./custom/button";
 import { api } from "../core/api";
@@ -10,8 +10,11 @@ import { FaCheckCircle } from "react-icons/fa";
 import { MdError } from "react-icons/md";
 import { useUpdate } from "../hooks/use-update";
 import { v4 as uuid } from "uuid";
+import { AuthContext } from "../context/AuthContext";
 
 const SignUp = (props) => {
+  const { notifyContext } = useContext(AuthContext);
+
   // Variables ensuring correct validation in frontend, won't allow user to submit a form until conditions are met
   const {
     value: firstNameValue,
@@ -133,7 +136,8 @@ const SignUp = (props) => {
     setGender("M");
   };
 
-  const createNewUser = async () => {
+  const createNewUser = async (e) => {
+    e.preventDefault();
     const uniqueID = uuid();
     const firstName = firstNameValue[0]?.toUpperCase() + firstNameValue?.slice(1).toLowerCase();
     const lastName = lastNameValue[0]?.toUpperCase() + lastNameValue?.slice(1).toLowerCase();
@@ -192,26 +196,14 @@ const SignUp = (props) => {
         addBearerToken(token);
         localStorage.setItem("token", token);
         localStorage.setItem("curUser", username);
+        notifyContext(`Welcome to the traveller's club, ${username}!`, "login");
         resetForm();
         props.setLog();
-        props.showNotification(
-          <div className="flex items-center">
-            <FaCheckCircle />
-            <span>Signed up successfully!</span>
-          </div>
-        );
-        setTimeout(() => {
-          navigate("/");
-        }, 3000);
+        navigate("/");
       })
       .catch((err) => {
         console.log(`Post req err - ${err}`);
-        props.showNotification(
-          <div className="flex items-center">
-            <MdError />
-            <span>Invalid credentials!</span>
-          </div>
-        );
+        notifyContext("Invalid credentials! Try again...", "error");
       })
       .finally(() => {
         setIsSubmitting(false);

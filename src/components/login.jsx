@@ -34,7 +34,7 @@ const Login = (props) => {
         addBearerToken(token);
         localStorage.setItem("curUser", username);
         localStorage.setItem("token", token);
-        notifyContext("Login successful!", "success");
+        notifyContext(`Welcome aboard, ${username}`, "login");
         props.setLog();
         navigate("/");
       })
