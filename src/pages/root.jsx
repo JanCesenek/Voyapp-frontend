@@ -5,7 +5,7 @@ import { FaCopyright } from "react-icons/fa";
 import { GiGlobe } from "react-icons/gi";
 import { ToastContainer, Flip } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import logo from "../imgs/flamebulb.svg";
+import logo from "/flamebulb.svg";
 
 const RootLayout = (props) => {
   return (
