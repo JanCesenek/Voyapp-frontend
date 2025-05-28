@@ -24,7 +24,7 @@ import { FaCheckSquare, FaWindowClose, FaEdit } from "react-icons/fa";
 import { greenIcon, goldIcon, purpleIcon } from "../core/icons";
 import { AuthContext } from "../context/AuthContext";
 
-const Profile = () => {
+const Profile = (props) => {
   const { notifyContext } = useContext(AuthContext);
 
   const curUsername = localStorage.getItem("curUser");
@@ -160,7 +160,8 @@ const Profile = () => {
         .then(async () => {
           await refetch();
           removeBearerToken();
-          notifyContext("User deleted successfully!", "logout");
+          props.setLog();
+          notifyContext("User deleted successfully!", "success");
           localStorage.clear();
         })
         .catch((err) => {

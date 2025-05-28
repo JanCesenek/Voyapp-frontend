@@ -5,7 +5,6 @@ import { FaChevronCircleDown, FaChevronCircleUp } from "react-icons/fa";
 import { GiCircleSparks } from "react-icons/gi";
 import { useUpdate } from "../hooks/use-update";
 import Loading from "./loading";
-import Leaving from "../audio/Leaving.mp3";
 
 const MainNavigation = (props) => {
   const { data, isLoading } = useUpdate("/notifications");
@@ -22,8 +21,6 @@ const MainNavigation = (props) => {
       removeBearerToken();
       localStorage.clear();
       props.setLog();
-      const audio = new Audio(Leaving);
-      audio.play();
     } else e.preventDefault();
   };
 

@@ -88,7 +88,7 @@ function App() {
       element: <RootLayout log={log} setLog={() => setLog(!log)} />,
       children: [
         { index: true, element: <Intro /> },
-        { path: "profile", element: <Profile /> },
+        { path: "profile", element: <Profile setLog={() => setLog(!log)} /> },
         { path: "destinations", element: <Destinations /> },
         { path: "accommodation", element: <Accommodation /> },
         {

@@ -196,7 +196,7 @@ const SignUp = (props) => {
         addBearerToken(token);
         localStorage.setItem("token", token);
         localStorage.setItem("curUser", username);
-        notifyContext(`Welcome to the traveller's club, ${username}!`, "login");
+        notifyContext(`Welcome to the traveller's club, ${username}!`, "success");
         resetForm();
         props.setLog();
         navigate("/");
